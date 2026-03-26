@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a2744">
+<link rel="manifest" href="manifest.json">
+<title>EMTP筆試練習</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#f5f6fa;--card:#fff;--primary:#1a2744;--accent:#2e75b6;--accent2:#1d9e75;--danger:#e24b4a;--warn:#ba7517;--text:#1a1a2e;--text2:#5a5a7a;--text3:#9a9ab0;--radius:14px;--shadow:0 2px 12px rgba(0,0,0,.06)}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;padding-bottom:env(safe-area-inset-bottom)}
+.screen{display:none;min-height:100vh;min-height:100dvh}
+.screen.active{display:flex;flex-direction:column}
+.topbar{background:var(--primary);color:#fff;padding:16px 20px;padding-top:max(16px,env(safe-area-inset-top));display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.topbar h1{font-size:18px;font-weight:600;flex:1}
+.topbar .back{font-size:22px;cursor:pointer;padding:4px}
+.content{flex:1;padding:16px;overflow-y:auto}
+
+/* HOME */
+.logo-area{text-align:center;padding:32px 0 24px}
+.logo-area .icon{font-size:48px;margin-bottom:8px}
+.logo-area h2{font-size:22px;color:var(--primary);font-weight:700}
+.logo-area p{font-size:13px;color:var(--text2);margin-top:4px}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:14px 10px;text-align:center;box-shadow:var(--shadow)}
+.stat-card .num{font-size:24px;font-weight:700;color:var(--accent)}
+.stat-card .label{font-size:11px;color:var(--text3);margin-top:2px}
+.menu-btn{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer;transition:transform .15s}
+.menu-btn:active{transform:scale(.97)}
+.menu-btn .emoji{font-size:28px;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.menu-btn .info h3{font-size:15px;font-weight:600}
+.menu-btn .info p{font-size:12px;color:var(--text2);margin-top:2px}
+.e-blue{background:#e6f1fb}.e-green{background:#e1f5ee}.e-orange{background:#faeeda}.e-red{background:#fcebeb}.e-purple{background:#eeedfe}
+
+/* FILTER */
+.filter-section{margin-bottom:18px}
+.filter-section h3{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--text2)}
+.chip-group{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 14px;border-radius:20px;font-size:13px;border:1.5px solid #ddd;cursor:pointer;background:var(--card);transition:all .2s;user-select:none}
+.chip.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+.chip .count{font-size:11px;opacity:.7;margin-left:3px}
+.start-btn{width:100%;padding:16px;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin-top:20px;transition:transform .15s}
+.start-btn:active{transform:scale(.97)}
+.start-btn:disabled{background:#ccc}
+
+/* QUIZ */
+.progress-bar{height:4px;background:#e0e0e0;border-radius:2px;margin-bottom:16px}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s}
+.q-counter{font-size:13px;color:var(--text3);margin-bottom:12px;display:flex;justify-content:space-between}
+.q-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);margin-bottom:16px}
+.q-text{font-size:15px;line-height:1.7;margin-bottom:16px;white-space:pre-line}
+.option{padding:14px 16px;border:1.5px solid #e0e0e0;border-radius:12px;margin-bottom:10px;cursor:pointer;font-size:14px;line-height:1.5;transition:all .2s;display:flex;gap:10px}
+.option:active{transform:scale(.98)}
+.option .letter{font-weight:700;color:var(--accent);flex-shrink:0;width:22px}
+.option.correct{border-color:var(--accent2);background:#e8f8f0;color:#0a6b4a}
+.option.wrong{border-color:var(--danger);background:#fef0f0;color:#a02020}
+.option.dim{opacity:.5}
+.option.disabled{pointer-events:none}
+.explain-box{background:#f0f7ff;border-left:4px solid var(--accent);border-radius:0 12px 12px 0;padding:14px 16px;margin-top:14px;font-size:13px;line-height:1.7;color:#2a4a6a;display:none}
+.explain-box.show{display:block}
+.next-btn{width:100%;padding:14px;border:none;border-radius:var(--radius);background:var(--primary);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;display:none;transition:transform .15s}
+.next-btn:active{transform:scale(.97)}
+.next-btn.show{display:block}
+
+/* RESULT */
+.result-card{background:var(--card);border-radius:var(--radius);padding:24px;text-align:center;box-shadow:var(--shadow);margin-bottom:20px}
+.result-card .score{font-size:56px;font-weight:800;color:var(--accent)}
+.result-card .total{font-size:16px;color:var(--text2)}
+.result-detail{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}
+.rd{background:var(--card);border-radius:var(--radius);padding:14px;text-align:center;box-shadow:var(--shadow)}
+.rd .n{font-size:22px;font-weight:700}.rd .l{font-size:12px;color:var(--text3);margin-top:2px}
+.rd.green .n{color:var(--accent2)}.rd.red .n{color:var(--danger)}
+
+/* HISTORY */
+.history-item{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.history-item .left h4{font-size:14px;font-weight:600}
+.history-item .left p{font-size:12px;color:var(--text3);margin-top:2px}
+.history-item .right{text-align:right}
+.history-item .pct{font-size:20px;font-weight:700}
+.history-item .pct.good{color:var(--accent2)}.history-item .pct.bad{color:var(--danger)}.history-item .pct.mid{color:var(--warn)}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3)}
+.empty-state .big{font-size:48px;margin-bottom:12px}
+
+/* WRONG REVIEW */
+.wrong-summary{background:#fff3e0;border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.wrong-summary h3{font-size:14px;color:#e65100;margin-bottom:4px}
+.wrong-summary p{font-size:13px;color:#bf360c}
+
+/* BOOKMARK & NOTE */
+.q-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.q-actions button{padding:8px 14px;border-radius:20px;font-size:12px;border:1.5px solid #ddd;cursor:pointer;background:var(--card);transition:all .2s;display:flex;align-items:center;gap:4px}
+.q-actions button:active{transform:scale(.95)}
+.q-actions button.active{background:var(--warn);color:#fff;border-color:var(--warn)}
+.q-actions button.fav-active{background:#e24b4a;color:#fff;border-color:#e24b4a}
+.note-area{margin-top:10px;display:none}
+.note-area.show{display:block}
+.note-area textarea{width:100%;border:1.5px solid #ddd;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;background:var(--card)}
+.note-area textarea:focus{outline:none;border-color:var(--accent)}
+.note-area .note-save{margin-top:6px;padding:6px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;font-size:12px;cursor:pointer}
+
+/* FAV SCREEN */
+.fav-item{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow);cursor:pointer}
+.fav-item .fav-head{display:flex;justify-content:space-between;align-items:center}
+.fav-item .fav-head h4{font-size:13px;font-weight:600;color:var(--accent)}
+.fav-item .fav-head .fav-del{color:var(--danger);font-size:18px;padding:4px 8px;cursor:pointer}
+.fav-item .fav-q{font-size:13px;color:var(--text);margin-top:6px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fav-item .fav-note{font-size:12px;color:var(--warn);margin-top:4px;font-style:italic}
+
+/* WRONG ANALYSIS */
+.analysis-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.analysis-card h3{font-size:14px;font-weight:600;margin-bottom:10px;color:var(--primary)}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:12px;color:var(--text2);width:90px;flex-shrink:0;text-align:right}
+.bar-track{flex:1;height:20px;background:#eee;border-radius:10px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:10px;transition:width .5s}
+.bar-val{font-size:11px;font-weight:600;width:36px;text-align:left;flex-shrink:0}
+.wrong-q-item{background:var(--card);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;box-shadow:var(--shadow);font-size:13px;line-height:1.6}
+.wrong-q-item .wq-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.wrong-q-item .wq-cat{font-size:11px;color:var(--accent);font-weight:600}
+.wrong-q-item .wq-note-btn{font-size:11px;color:var(--warn);cursor:pointer;text-decoration:underline}
+.wrong-q-item .wq-text{color:var(--text2)}
+.wrong-q-item .wq-ans{color:var(--accent2);font-weight:600;margin-top:4px}
+.wrong-q-item .wq-note{color:var(--warn);font-style:italic;margin-top:4px;font-size:12px}
+.wrong-q-item .wq-note-edit{margin-top:6px;display:none}
+.wrong-q-item .wq-note-edit textarea{width:100%;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:12px;font-family:inherit;min-height:50px;resize:vertical}
+.wrong-q-item .wq-note-edit button{margin-top:4px;padding:4px 12px;border:none;border-radius:6px;background:var(--accent);color:#fff;font-size:11px;cursor:pointer}
+.tab-row{display:flex;gap:0;border-bottom:2px solid #e0e0e0;margin-bottom:14px}
+.tab-btn{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* MY NOTES */
+.note-item{background:var(--card);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;box-shadow:var(--shadow)}
+.note-item .note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.note-item .note-head .note-tag{font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px}
+.note-item .note-head .note-tag.q-tag{background:#e6f1fb;color:#2e75b6}
+.note-item .note-head .note-tag.free-tag{background:#eeedfe;color:#534ab7}
+.note-item .note-head .note-del{color:var(--danger);font-size:18px;padding:4px 8px;cursor:pointer}
+.note-item .note-q{font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.5}
+.note-item .note-body{font-size:14px;line-height:1.6;color:var(--text);white-space:pre-line}
+.note-item .note-time{font-size:11px;color:var(--text3);margin-top:6px}
+.note-item .note-edit-area{display:none;margin-top:8px}
+.note-item .note-edit-area textarea{width:100%;border:1.5px solid #ddd;border-radius:10px;padding:10px;font-size:13px;font-family:inherit;min-height:60px;resize:vertical;background:var(--card)}
+.note-item .note-edit-area textarea:focus{outline:none;border-color:var(--accent)}
+.note-item .note-edit-area .ne-btns{display:flex;gap:8px;margin-top:6px}
+.note-item .note-edit-area .ne-btns button{padding:6px 14px;border:none;border-radius:8px;font-size:12px;cursor:pointer}
+.note-item .note-edit-area .ne-btns .ne-save{background:var(--accent);color:#fff}
+.note-item .note-edit-area .ne-btns .ne-cancel{background:#eee;color:var(--text2)}
+.add-note-btn{width:100%;padding:14px;border:2px dashed #ccc;border-radius:var(--radius);background:none;color:var(--text2);font-size:14px;cursor:pointer;margin-bottom:16px;transition:all .2s}
+.add-note-btn:active{transform:scale(.97);border-color:var(--accent)}
+.new-note-form{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:var(--shadow);display:none}
+.new-note-form.show{display:block}
+.new-note-form textarea{width:100%;border:1.5px solid #ddd;border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;min-height:80px;resize:vertical;background:var(--card)}
+.new-note-form textarea:focus{outline:none;border-color:var(--accent)}
+.new-note-form .nf-btns{display:flex;gap:8px;margin-top:8px}
+.new-note-form .nf-btns button{padding:8px 18px;border:none;border-radius:8px;font-size:13px;cursor:pointer}
+.new-note-form .nf-btns .nf-save{background:var(--accent);color:#fff;font-weight:600}
+.new-note-form .nf-btns .nf-cancel{background:#eee;color:var(--text2)}
+.note-filter-row{display:flex;gap:8px;margin-bottom:14px}
+.note-filter-row .nf-chip{padding:6px 12px;border-radius:16px;font-size:12px;border:1.5px solid #ddd;cursor:pointer;background:var(--card)}
+.note-filter-row .nf-chip.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* LOGIN SCREEN */
+.login-screen{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a2744 0%,#2e4a6e 100%);padding:24px}
+.login-card{background:#fff;border-radius:20px;padding:36px 28px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.15);text-align:center}
+.login-card .login-icon{font-size:56px;margin-bottom:12px}
+.login-card h2{font-size:22px;font-weight:700;color:#1a2744;margin-bottom:4px}
+.login-card .login-sub{font-size:13px;color:#666;margin-bottom:24px}
+.login-card input{width:100%;padding:14px 16px;border:2px solid #e0e0e0;border-radius:12px;font-size:16px;font-family:inherit;text-align:center;margin-bottom:12px;transition:border-color .2s}
+.login-card input:focus{outline:none;border-color:#2e75b6}
+.login-card input::placeholder{color:#bbb}
+.login-card .login-btn{width:100%;padding:14px;border:none;border-radius:12px;background:#1a2744;color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:transform .15s;margin-bottom:10px}
+.login-card .login-btn:active{transform:scale(.97)}
+.login-card .login-hint{font-size:11px;color:#999;line-height:1.5}
+.login-card .login-restore{margin-top:16px;padding-top:16px;border-top:1px solid #eee}
+.login-card .login-restore button{background:none;border:1.5px solid #2e75b6;color:#2e75b6;padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer}
+.login-user-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;background:rgba(255,255,255,.08);font-size:12px;color:rgba(255,255,255,.7)}
+.login-user-bar .user-name{font-weight:600;color:#fff}
+.login-user-bar .user-actions{display:flex;gap:10px}
+.login-user-bar .user-actions a{color:rgba(255,255,255,.6);text-decoration:underline;cursor:pointer;font-size:11px}
+</style>
+</head>
+<body>
+
+
+<!-- LOGIN SCREEN -->
+<div id="login" class="login-screen" style="display:none">
+  <div class="login-card">
+    <div class="login-icon">🚑</div>
+    <h2>EMTP 筆試練習</h2>
+    <div class="login-sub">請輸入你的代號開始練習</div>
+    <input type="text" id="login-input" placeholder="例如：消防01、王小明" maxlength="20" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">開始練習</button>
+    <div class="login-hint">代號用於識別你的練習紀錄<br>下次輸入相同代號即可恢復所有資料</div>
+    <div class="login-restore">
+      <button onclick="document.getElementById('import-file').click()">📂 從備份檔還原資料</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importFromFile(this)">
+    </div>
+  </div>
+</div>
+
+<!-- HOME SCREEN -->
+<div id="home" class="screen active">
+  <div class="topbar"><h1>EMTP 筆試練習</h1></div>
+  <div class="login-user-bar" id="user-bar">
+    <span>👤 <span class="user-name" id="user-display"></span></span>
+    <span class="user-actions">
+      <a onclick="exportBackup()">💾 備份</a>
+      <a onclick="switchUser()">🔄 切換</a>
+    </span>
+  </div>
+  <div class="content">
+    <div class="logo-area">
+      <div class="icon">🚑</div>
+      <h2>高級救護技術員</h2>
+      <p>110–113年度考古題 ｜ 共400題</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat-card"><div class="num" id="s-total">0</div><div class="label">已練習</div></div>
+      <div class="stat-card"><div class="num" id="s-acc">0%</div><div class="label">正確率</div></div>
+      <div class="stat-card"><div class="num" id="s-wrong">0</div><div class="label">錯題數</div></div>
+    </div>
+    <div class="menu-btn" onclick="goFilter('all')"><div class="emoji e-blue">📝</div><div class="info"><h3>開始練習</h3><p>自選年份、分類開始作答</p></div></div>
+    <div class="menu-btn" onclick="goFilter('wrong')"><div class="emoji e-red">❌</div><div class="info"><h3>錯題複習</h3><p id="wrong-count-label">針對做錯的題目再次測驗</p></div></div>
+    <div class="menu-btn" onclick="goWrongAnalysis()"><div class="emoji e-orange">📈</div><div class="info"><h3>錯題分析</h3><p>查看錯題分類分佈與筆記</p></div></div>
+    <div class="menu-btn" onclick="goFavorites()"><div class="emoji e-purple">⭐</div><div class="info"><h3>我的收藏</h3><p id="fav-count-label">收藏重要題目方便複習</p></div></div>
+    <div class="menu-btn" onclick="goMyNotes()"><div class="emoji e-green">📓</div><div class="info"><h3>我的筆記</h3><p id="notes-count-label">自由新增與瀏覽所有筆記</p></div></div>
+    <div class="menu-btn" onclick="goFilter('random')"><div class="emoji e-green">🎲</div><div class="info"><h3>隨機挑戰</h3><p>隨機抽25題快速測驗</p></div></div>
+    <div class="menu-btn" onclick="goFilter('trap')"><div class="emoji e-orange">⚠️</div><div class="info"><h3>陷阱題特訓</h3><p>精選高頻陷阱題練習</p></div></div>
+    <div class="menu-btn" onclick="goHistory()"><div class="emoji e-blue">📊</div><div class="info"><h3>練習紀錄</h3><p>查看歷次練習成績</p></div></div>
+    <div class="menu-btn" onclick="exportBackup()"><div class="emoji e-green">💾</div><div class="info"><h3>備份 / 還原資料</h3><p>匯出或匯入練習紀錄檔案</p></div></div>
+  </div>
+</div>
+
+<!-- FILTER SCREEN -->
+<div id="filter" class="screen">
+  <div class="topbar"><span class="back" onclick="goHome()">←</span><h1>選擇練習範圍</h1></div>
+  <div class="content">
+    <div class="filter-section"><h3>年度</h3><div class="chip-group" id="year-chips"></div></div>
+    <div class="filter-section"><h3>主分類</h3><div class="chip-group" id="cat-chips"></div></div>
+    <div id="selected-info" style="font-size:13px;color:var(--text2);margin-top:12px;text-align:center"></div>
+    <button class="start-btn" id="start-btn" onclick="startQuiz()">開始練習</button>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz" class="screen">
+  <div class="topbar"><span class="back" onclick="confirmQuit()">←</span><h1 id="quiz-title">練習中</h1></div>
+  <div class="content">
+    <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+    <div class="q-counter"><span id="q-num"></span><span id="q-cat" style="color:var(--accent);font-size:12px"></span></div>
+    <div class="q-card">
+      <div class="q-text" id="q-text"></div>
+      <div id="options"></div>
+      <div class="explain-box" id="explain"></div>
+      <div class="q-actions" id="q-actions" style="display:none">
+        <button id="fav-btn" onclick="toggleFav()">⭐ 收藏</button>
+        <button id="note-btn" onclick="toggleNoteArea()">📝 加筆記</button>
+      </div>
+      <div class="note-area" id="note-area">
+        <textarea id="note-input" placeholder="寫下你的筆記、容易搞混的觀念..."></textarea>
+        <button class="note-save" onclick="saveNote()">儲存筆記</button>
+      </div>
+    </div>
+    <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一題 →</button>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="result" class="screen">
+  <div class="topbar"><h1>練習結果</h1></div>
+  <div class="content">
+    <div class="result-card">
+      <div class="score" id="r-score">0</div>
+      <div class="total" id="r-total">/ 0 題</div>
+    </div>
+    <div class="result-detail">
+      <div class="rd green"><div class="n" id="r-correct">0</div><div class="l">答對</div></div>
+      <div class="rd red"><div class="n" id="r-wrong">0</div><div class="l">答錯</div></div>
+    </div>
+    <div id="r-wrong-section"></div>
+    <div class="menu-btn" onclick="reviewWrong()" id="r-review-btn" style="display:none"><div class="emoji e-red">🔄</div><div class="info"><h3>立即複習錯題</h3><p>針對本次做錯的題目再練一次</p></div></div>
+    <div class="menu-btn" onclick="goHome()"><div class="emoji e-blue">🏠</div><div class="info"><h3>回到首頁</h3><p>查看其他練習選項</p></div></div>
+  </div>
+</div>
+
+<!-- HISTORY SCREEN -->
+<div id="history" class="screen">
+  <div class="topbar"><span class="back" onclick="goHome()">←</span><h1>練習紀錄</h1></div>
+  <div class="content" id="history-list"></div>
+</div>
+
+<!-- FAVORITES SCREEN -->
+<div id="favorites" class="screen">
+  <div class="topbar"><span class="back" onclick="goHome()">←</span><h1>我的收藏</h1></div>
+  <div class="content" id="fav-list"></div>
+</div>
+
+<!-- WRONG ANALYSIS SCREEN -->
+<div id="wrongAnalysis" class="screen">
+  <div class="topbar"><span class="back" onclick="goHome()">←</span><h1>錯題分析</h1></div>
+  <div class="content" id="wa-content"></div>
+</div>
+
+
+<!-- MY NOTES SCREEN -->
+<div id="myNotes" class="screen">
+  <div class="topbar"><span class="back" onclick="goHome()">←</span><h1>我的筆記</h1></div>
+  <div class="content" id="mn-content"></div>
+</div>
+
+<script>
+// ============================================================
+// QUESTION DATABASE (400 questions)
+// ============================================================
+const Q=[{"id":0,"year":110,"num":1,"ans":0,"cat":"EMS系統與法規","sub":"醫療指導","text":"高級救護技術員的初訓課程，是屬於哪一種的醫療指導模式？","opts":["前瞻性","培育性","即時性","任務性"],"explain":"初訓課程屬於前瞻性醫療指導(事前制定的教育訓練/SOP)。","trap":0,"ch":""},{"id":1,"year":110,"num":2,"ans":0,"cat":"EMS系統與法規","sub":"法律責任","text":"救護技術員對COVID-19病人因擔心感染而未進行必要急救，法律觀點何者正確？","opts":["家屬可主張救護技術員未依法行政而提出告訴","家屬民事告訴時效為六個月","救護技術員符合正當防衛與緊急避難","救護技術員可主張病人與有過失"],"explain":"","trap":0,"ch":""},{"id":2,"year":110,"num":3,"ans":1,"cat":"EMS系統與法規","sub":"感染防護","text":"救護技術員發生疑似愛滋病毒暴露時，緊急處置何者正確？","opts":["扎傷處應以大量優碘消毒","暴露處為黏膜(如眼睛)則大量沖水即可","必須於72小時內向工作單位通報","暴露後3個月、6個月、1年追蹤三次"],"explain":"黏膜暴露大量沖水即可。扎傷用肥皂和水(非優碘)，24hr內通報。","trap":1,"ch":""},{"id":3,"year":110,"num":4,"ans":0,"cat":"EMS系統與法規","sub":"派遣系統","text":"依據國際緊急派遣協會定義，公共場所目擊OHCA的派遣等級是？","opts":["E (ECHO)","A (ALPHA)","C (CHARLIE)","O (OMEGA)"],"explain":"","trap":0,"ch":""},{"id":4,"year":110,"num":5,"ans":1,"cat":"EMS系統與法規","sub":"品質管理","text":"進行區域EMS重大外傷品管時，哪一類傷患死亡應深入了解？","opts":["ISS低且RTS低","ISS低且RTS高","ISS高且RTS低","ISS高且RTS高"],"explain":"ISS低(傷不重)+RTS高(生理好)卻死亡→品管問題。","trap":1,"ch":""},{"id":5,"year":110,"num":6,"ans":3,"cat":"EMS系統與法規","sub":"教學方法","text":"G-A-S模式中「獲取資訊」的最恰當詢問方式？","opts":["您為什麼沒有進行OOO的處置？","您之前是否沒有遇過這種情境？","如果我是您，您覺得我會怎麼作？","當病人發生XXX時，您當時的心情或想法是什麼？"],"explain":"","trap":0,"ch":""},{"id":6,"year":110,"num":7,"ans":3,"cat":"EMS系統與法規","sub":"研究方法","text":"以google表單完成碩士論文問卷研究，何者正確？","opts":["認識同仁填問卷不需知情同意書","減少選擇偏差需專家內容效度","減少測量偏差需分層與抽樣","增加研究信度可再次請受訪者填答"],"explain":"再測信度(test-retest)。","trap":0,"ch":""},{"id":7,"year":110,"num":8,"ans":1,"cat":"基礎醫學","sub":"呼吸生理","text":"關於血液中氧氣與二氧化碳運輸，何者為是？","opts":["直接溶解的氧氣量大於與血紅素結合","一個血紅素分子可攜帶4個氧氣分子，PaO2 80-100mmHg時飽和","CO2有兩種型態，直接溶解約佔8%","PaO2 40mmHg時90%以上血紅素已攜帶氧"],"explain":"","trap":0,"ch":""},{"id":8,"year":110,"num":9,"ans":1,"cat":"基礎醫學","sub":"神經解剖","text":"關於腦部解剖構造，何者為是？","opts":["丘腦監督維持身體姿勢的肌肉","下視丘含口渴中樞、體溫中樞、攝食中樞","心血管中樞及呼吸節律中樞位於橋腦","大腦包含感覺訊息轉遞處理中樞"],"explain":"(A)小腦(C)延腦(D)丘腦。","trap":0,"ch":""},{"id":9,"year":110,"num":10,"ans":2,"cat":"藥理學","sub":"抗心律不整藥","text":"關於Amiodarone以下敘述何者為非？","opts":["屬Class III抗心律不整藥","可能引致心臟收縮力降低、血管擴張","嚴禁用於嚴重心臟功能受損患者","藥效半生期長可至40天"],"explain":"Amiodarone可用於心功能受損者，「嚴禁」是錯的。","trap":1,"ch":""},{"id":10,"year":110,"num":11,"ans":1,"cat":"創傷","sub":"燒燙傷","text":"60歲男性75kg，一度10%二度18%三度9%，兩套標準輸液套管，前8小時每套每分鐘幾滴？","opts":["84","42","21","63"],"explain":"不含一度→27%。2ml×75×27=4050。前8hr半=2025。兩套各1012.5/480×20=42。","trap":1,"ch":""},{"id":11,"year":110,"num":12,"ans":3,"cat":"基礎醫學","sub":"血液學","text":"關於血液的組成，何者為是？","opts":["血液大部分由紅血球組成佔55-60%","紅血球壽命120天比例僅次於白血球","O型血漿不含A或B抗體","血漿中水份約佔九成"],"explain":"","trap":0,"ch":""},{"id":12,"year":110,"num":13,"ans":0,"cat":"藥理學","sub":"藥理學總論","text":"有關藥理學名詞，何者正確？","opts":["拮抗作用：併用藥物效果總和小於個別加總(1+1<2)","禁忌症：治療劑量內不希望但無法避免的效果","藥物過敏：被另一藥物影響產生增減藥效","適應性：重複使用效果增強需調低劑量"],"explain":"","trap":0,"ch":""},{"id":13,"year":110,"num":14,"ans":1,"cat":"基礎醫學","sub":"呼吸生理","text":"通氣量和潮氣容積的描述，何者為是？","opts":["正常潮氣容積為5000-6000ml","計算肺泡潮氣量需減掉氣道容積","潮氣容積等於通氣量乘以呼吸次數","通氣量每人固定不變"],"explain":"","trap":0,"ch":""},{"id":14,"year":110,"num":15,"ans":0,"cat":"基礎醫學","sub":"呼吸監測","text":"二氧化碳濃度圖儀監測，何者為是？","opts":["CO2分壓在吸氣階段可降至0","潮氣末CO2位於吐氣起點","開始吐氣CO2最高後下降","CPR中EtCO2突然上升代表插管滑脫"],"explain":"","trap":0,"ch":""},{"id":15,"year":110,"num":16,"ans":0,"cat":"病史詢問與評估","sub":"病史詢問","text":"關於病患病史詢問內容，正確觀念是？","opts":["主訴包括主要自覺症狀及症狀發生持續時間","現病史第一重點是釐清患者身分特徵","詢問發生狀況指病患反應及是否有人處置","加劇或緩解因素是判斷危急個案的必要條件"],"explain":"","trap":0,"ch":""},{"id":16,"year":110,"num":17,"ans":3,"cat":"病史詢問與評估","sub":"病史詢問","text":"病史詢問之目的與作法何者為非？","opts":["藉訪談了解症狀及醫療狀況","經由交談安撫傷病患情緒","危急病人應先完成初級評估","無脈搏CPR時病史詢問等院後"],"explain":"CPR時同事仍可同步詢問家屬。","trap":1,"ch":""},{"id":17,"year":110,"num":18,"ans":3,"cat":"內科急症","sub":"感染/深頸部","text":"75歲男性牙痛數天左臉頸腫脹發燒吞嚥困難，臆斷配對何者為非？","opts":["體溫上升、口水積聚、頸部皮下氣腫","誘發因子為頸部異物、牙源性感染","主要危象：漸進式呼吸困難","臆斷：嚴重過敏合併咽喉水腫"],"explain":"牙痛數天→深頸部感染，非過敏。","trap":1,"ch":""},{"id":18,"year":110,"num":19,"ans":1,"cat":"內科急症","sub":"肺栓塞","text":"48歲男性腳腫呼吸喘心跳120，何者視觸診支持肺栓塞？","opts":["單側肢體紅腫水泡疼痛劇烈","單側肢體腫脹、肢體溫熱","雙下肢脈搏消失或減弱","雙下肢出現網狀青斑"],"explain":"單側腫脹溫熱→DVT→PE。","trap":0,"ch":""},{"id":19,"year":110,"num":20,"ans":1,"cat":"EMS系統與法規","sub":"醫病關係","text":"護送COVID-19快篩陽性病患，最適合的醫病互動模式？","opts":["主動—被動模式","指導—合作模式","共同參與模式","遵從法規模式"],"explain":"","trap":0,"ch":""},{"id":20,"year":110,"num":21,"ans":3,"cat":"內科急症","sub":"神經急症","text":"50歲男性右眼無法往右看，其他方向正常，左眼正常，最適當？","opts":["第三對腦神經病灶","第四對腦神經病灶","混合型神經病灶","第六對腦神經病灶"],"explain":"外展受限→CN VI。","trap":1,"ch":""},{"id":21,"year":110,"num":22,"ans":3,"cat":"基礎醫學","sub":"呼吸評估","text":"哮喘音(Wheezes)和喘鳴音(Stridor)比較，何者有誤？","opts":["哮喘音屬肺內；喘鳴音屬肺外","哮喘音呼氣期；喘鳴音吸氣期","哮喘音高頻；喘鳴音中頻","哮喘音為上呼吸道；喘鳴音為小支氣管"],"explain":"(D)描述對調！Wheezes=下呼吸道；Stridor=上呼吸道。","trap":1,"ch":""},{"id":22,"year":110,"num":23,"ans":3,"cat":"病史詢問與評估","sub":"SBAR溝通","text":"SBAR應用中何者錯誤？","opts":["同事報案主訴意識不清→S","60歲男性有高血壓糖尿病→B","GCS E2V2M5血糖50→A","給予D50W後GCS回復→R"],"explain":"已做處置+結果屬A，非R(建議)。","trap":1,"ch":""},{"id":23,"year":110,"num":24,"ans":2,"cat":"心血管急症","sub":"心律不整處置","text":"20歲男性心悸20分鐘窄QRS規則快速心律，何者最適當？","opts":["血壓80/50先完成12導程","血壓120/80給Diltiazem 15mg","血壓120/80嘗試Adenosine 6mg快速注射","血壓80/50給Amiodarone 150mg"],"explain":"穩定SVT→Adenosine 6mg IV push。","trap":0,"ch":""},{"id":24,"year":110,"num":25,"ans":1,"cat":"內科急症","sub":"內分泌急症","text":"關於甲狀腺急症，何者為是？","opts":["黏液性水腫有聲音尖銳及肌腱反射增強","嚴重黏液性水腫有嗜睡體溫下降需與低血糖鑑別","甲狀腺機能亢進有體重增加","甲狀腺風暴需與嗎啡類中毒鑑別"],"explain":"","trap":0,"ch":""},{"id":25,"year":110,"num":26,"ans":2,"cat":"內科急症","sub":"腹部急症","text":"50歲男性上腹劇痛有抽菸酗酒，關於評估處置何者為非？","opts":["可能有低血容考慮靜脈輸液","注意呼吸道暢通必要時給氧","病人能清楚闡明痛點可排除心血管疾病","腹部僵硬表示腸道穿孔應禁食"],"explain":"上腹痛不能排除ACS！","trap":1,"ch":""},{"id":26,"year":110,"num":27,"ans":3,"cat":"內科急症","sub":"呼吸道急症","text":"中年男子stridor上車後喘鳴聲幾乎消失，最先做什麼？","opts":["檢查攜帶氧是否用盡","確認血氧是否維持94%","協助給予退燒藥物","觀察呼吸動力是否足夠"],"explain":"喘鳴聲消失可能是惡化！需評估呼吸動力。","trap":1,"ch":""},{"id":27,"year":110,"num":28,"ans":2,"cat":"內科急症","sub":"消化道急症","text":"病人主訴吐血，處理何者正確？","opts":["口吐鮮紅血就不是胃或十二指腸出血","糖尿病吐血應給大量含糖輸液","肝硬化食道靜脈曲張出血死亡率較高","意識清醒吐血不需介入呼吸道"],"explain":"","trap":0,"ch":""},{"id":28,"year":110,"num":29,"ans":0,"cat":"內科急症","sub":"感染症","text":"以下何種疾病為空氣傳染？","opts":["水痘","腸病毒","流行性感冒","鏈球菌肺炎"],"explain":"空氣傳染：水痘、麻疹、結核。","trap":0,"ch":""},{"id":29,"year":110,"num":30,"ans":0,"cat":"內科急症","sub":"過敏反應","text":"成人致命性過敏反應最可能的主訴與病徵？","opts":["主訴喘有喘鳴聲合併持續腹痛","全身皮膚起疹子發紅發癢","主訴昏厥已清醒血壓120/74","持續胸悶冒冷汗心跳90"],"explain":"","trap":0,"ch":""},{"id":30,"year":110,"num":31,"ans":1,"cat":"心血管急症","sub":"心包膜填塞","text":"呼吸困難皮膚發紺血壓降低脈搏壓窄奇異脈，最可能？","opts":["心肌炎","心包膜填塞","心肌梗塞","房室傳導阻斷"],"explain":"","trap":0,"ch":""},{"id":31,"year":110,"num":32,"ans":1,"cat":"心血管急症","sub":"心肌梗塞","text":"急性右心室MI合併右心衰竭BP80/46 HR53有雙側濕囉音，最適當？","opts":["靜脈注射β blocker","靜脈滴注Dopamine","靜脈滴注Dobutamine","Normal saline快速注射"],"explain":"有濕囉音不能大量輸液→需Dopamine升壓。","trap":1,"ch":""},{"id":32,"year":110,"num":33,"ans":0,"cat":"內科急症","sub":"中毒","text":"40歲女性GCS=E1V1M4 pH7.20 PaCO2=80 PaO2=40 HCO3=25，最可能？","opts":["安眠藥過量","氣喘急性發作","肺炎併呼吸衰竭","心因性肺水腫"],"explain":"急性呼吸性酸中毒=換氣不足→安眠藥。","trap":0,"ch":""},{"id":33,"year":110,"num":34,"ans":3,"cat":"內科急症","sub":"神經急症","text":"60歲男性左側基底核出血併天幕疝脫，最可能伴隨？","opts":["右眼瞳孔放大右側無力","左眼瞳孔放大左側無力","右眼瞳孔放大左側無力","左眼瞳孔放大右側肢體無力"],"explain":"同側瞳孔放大+對側肢體無力。","trap":0,"ch":""},{"id":34,"year":110,"num":35,"ans":0,"cat":"心血管急症","sub":"心律不整處置","text":"胸悶冒汗頭暈寬QRS快速心律血壓70/40，最佳處置？","opts":["同步電擊100J","非同步電擊200J","Atropine 1mg IV","Adenosine 6mg IV"],"explain":"不穩定VT→同步電擊。","trap":0,"ch":""},{"id":35,"year":110,"num":36,"ans":3,"cat":"內科急症","sub":"腦中風","text":"中風病人到院前處置何者最適當？","opts":["皆須快速大量輸液","高血壓立即服降血壓藥","意識不清IICP頭抬高超過45度","選擇合適醫院必要時繞過資源不足醫院"],"explain":"","trap":0,"ch":""},{"id":36,"year":110,"num":37,"ans":3,"cat":"內科急症","sub":"神經急症","text":"有關眩暈何者為非？","opts":["神經學症狀感覺轉動","周邊型短暫中樞型持續不一定","周邊型伴隨聽力減弱耳鳴","周邊型合併多方向持續性眼震"],"explain":"多方向持續眼震=中樞型。","trap":1,"ch":""},{"id":37,"year":110,"num":38,"ans":2,"cat":"內科急症","sub":"過敏反應","text":"40歲男性服不明止痛藥後全身發紅，何者正確？","opts":["腹痛嘔吐多半因急性腸胃炎","低血壓全身紅疹優先考慮敗血性休克","出現呼吸困難可能因支氣管收縮","合併休克epinephrine應靜脈注射"],"explain":"Epi應肌肉注射非IV。","trap":0,"ch":""},{"id":38,"year":110,"num":39,"ans":3,"cat":"心血管急症","sub":"心律不整","text":"75歲女士BP78/49 HR40完全房室傳導阻斷，何者為是？","opts":["一度AVB不需緊急治療","二度Mobitz I不需緊急治療","二度Mobitz II先給Atropine","三度AVB不穩定考慮TCP"],"explain":"","trap":0,"ch":""},{"id":39,"year":110,"num":40,"ans":0,"cat":"內科急症","sub":"呼吸急症","text":"80歲COPD近期呼吸喘有哮鳴聲，何者為非？","opts":["COPD依賴低氧驅力血氧<90%不可給氧","有支氣管擴張劑可協助使用","呼吸急促精神混亂可能血氧低或CO2多","聽診無哮鳴仍須考慮嚴重發作"],"explain":"低氧驅力已過時！仍應給氧。","trap":1,"ch":""},{"id":40,"year":110,"num":41,"ans":0,"cat":"內科急症","sub":"腦中風","text":"56歲女士疑似中風，何者符合tPA適應症？","opts":["四個月前腸胃道出血病史","血糖30 mg/dL","藥物控制後血壓190/115","最後正常時間5小時前"],"explain":"3個月內為禁忌，4個月前非禁忌。","trap":1,"ch":""},{"id":41,"year":110,"num":42,"ans":1,"cat":"內科急症","sub":"感染症","text":"腦膜炎雙球菌感染何者為非？","opts":["葛蘭氏陰性球菌","好發於老年人","飛沫傳染需預防性抗生素","約10%成為帶原者"],"explain":"好發年輕人及兒童。","trap":1,"ch":""},{"id":42,"year":110,"num":43,"ans":0,"cat":"創傷","sub":"創傷評估","text":"創傷嚴重度評估何者為非？","opts":["RTS分數愈高傷害愈高","AIS分六區0-6分越高越嚴重","ISS三區最高AIS平方總合≧16嚴重","GCS最低3分最高15分"],"explain":"RTS越高=傷害越輕(與ISS相反)。","trap":1,"ch":""},{"id":43,"year":110,"num":44,"ans":0,"cat":"內科急症","sub":"腎臟/電解質","text":"70歲末期腎病未洗腎一周昏迷HR40 BP70/40，何種用藥最不適當？","opts":["MgSO4","Sodium bicarbonate","Atropine","Calcium gluconate"],"explain":"高血鉀不用MgSO4。","trap":0,"ch":""},{"id":44,"year":110,"num":45,"ans":2,"cat":"內科急症","sub":"內分泌急症","text":"下列哪一個疾病較會造成低血壓？","opts":["子癲前症","急性腦梗塞","腎上腺危象","安非他命中毒"],"explain":"","trap":0,"ch":""},{"id":45,"year":110,"num":46,"ans":1,"cat":"內科急症","sub":"內分泌急症","text":"48歲糖尿病+高血壓呼吸困難血糖450深快呼吸，何者為是？","opts":["血壓高不建議大量輸液","必須考量潛在感染問題","容易出現頭痛","常規給予碳酸氫鈉"],"explain":"","trap":0,"ch":""},{"id":46,"year":110,"num":47,"ans":0,"cat":"心血管急症","sub":"心電圖判讀","text":"關於心電圖敘述何者為是？","opts":["超急性T波可持續一到兩小時","Lead I aVL ST上升暗示心室中膈冠狀動脈阻塞","RBBB通常暗示嚴重心臟疾病","三度AVB的QRS均超過三小格"],"explain":"","trap":0,"ch":""},{"id":47,"year":110,"num":48,"ans":2,"cat":"內科急症","sub":"呼吸急症","text":"40歲女性氣喘呼吸困難何者為非？","opts":["應列入心肌炎肺栓塞鑑別","有wheezing可給支氣管擴張劑","懷孕不建議院前給支氣管擴張劑","血氧正常無wheezing不可排除氣喘"],"explain":"懷孕非禁忌！","trap":1,"ch":""},{"id":48,"year":110,"num":49,"ans":1,"cat":"創傷","sub":"腹部創傷","text":"50歲女性跌落撞右後背休克超音波正常，何者為非？","opts":["可給1000cc生理食鹽水","超音波正常可證明後腹腔無出血","腰部瘀青可能Turner sign","REBOA可暫時控制出血"],"explain":"eFAST對後腹腔敏感度低。","trap":1,"ch":""},{"id":49,"year":110,"num":50,"ans":1,"cat":"創傷","sub":"孕婦創傷","text":"關於孕婦外傷何者最適當？","opts":["輕微出血便有明顯血壓下降","安全帶可能增加子宮破裂","右側躺避免壓迫下腔靜脈","子宮貫穿傷胎兒較佳預後"],"explain":"","trap":0,"ch":""},{"id":50,"year":110,"num":51,"ans":3,"cat":"創傷","sub":"小兒創傷","text":"13歲35kg GCS=E2V2M4休克左側張力性氣胸，何者最適當？","opts":["安全帶徵象與腹內損傷無關","小兒肋骨骨折胸腔內損傷不高","左側張力性氣胸於腋後線減壓","先以700ml林格氏液快速輸注"],"explain":"20ml/kg=700ml。針刺在腋中線前側。","trap":0,"ch":""},{"id":51,"year":110,"num":52,"ans":2,"cat":"創傷","sub":"胸部創傷","text":"18歲男性車禍持續胸痛超音波正常，何者為非？","opts":["應考慮主動脈破裂","兩側脈搏可能強弱不同","超音波無積液可排除主動脈破裂","心音可能有心雜音"],"explain":"超音波正常不能排除！","trap":1,"ch":""},{"id":52,"year":110,"num":53,"ans":3,"cat":"創傷","sub":"出血性休克","text":"關於出血性休克何者為非？","opts":["所有創傷性休克需排除出血性","輸液首選林格氏液其次生理食鹽水","1000cc後短暫改善又惡化預估15-40%","合併腦外傷按允許性低血壓≧90mmHg"],"explain":"合併腦外傷應維持SBP≥110。","trap":1,"ch":""},{"id":53,"year":110,"num":54,"ans":3,"cat":"創傷","sub":"腹部創傷","text":"48歲車禍右上腹痛eFAST肝腎交界有積液，何者錯誤？","opts":["eFAST提供良好敏感度特異度","掃描部位為身體最低部位","肝腎交界積液懷疑肝臟破裂","盡速送往最近醫院"],"explain":"應送創傷中心非最近醫院。","trap":1,"ch":""},{"id":54,"year":110,"num":55,"ans":3,"cat":"創傷","sub":"頭部創傷","text":"有關顱底骨折何者為非？","opts":["浣熊眼+鼻漏→前顱底","耳漏→中顱底","Battle sign→後顱底","需X光檢查確診"],"explain":"需CT確診非X光。","trap":1,"ch":""},{"id":55,"year":110,"num":56,"ans":3,"cat":"創傷","sub":"頭部創傷","text":"頭部創傷急救處置何者為非？","opts":["保護頸椎維持呼吸道通暢","低血氧低血壓增加TBI死亡率","BVM換氣同一般10-12次/分","TBI血壓維持在90mmHg以下"],"explain":"血壓應維持≥90！","trap":1,"ch":""},{"id":56,"year":110,"num":57,"ans":3,"cat":"創傷","sub":"創傷評估","text":"PHTLS XABCDE何者為非？","opts":["X：控制大出血","A：呼吸道頸椎保護","C：循環控制中輕度出血","D：鑑別診斷致命傷害"],"explain":"D=Disability失能評估。","trap":0,"ch":""},{"id":57,"year":110,"num":58,"ans":3,"cat":"創傷","sub":"止血","text":"多處動脈出血大面積軟組織損傷開放性骨折，最理想止血法？","opts":["戰術止血帶","直接加壓","止血棉填塞","合併多種止血法"],"explain":"","trap":0,"ch":""},{"id":58,"year":110,"num":59,"ans":1,"cat":"心血管急症","sub":"心電圖判讀","text":"70歲男性胸痛穩定12導程STEMI，何者最適當？","opts":["立刻做右側心電圖","通報啟動心導管小組","到院後再追蹤","給藥物就近送一般醫院"],"explain":"","trap":0,"ch":""},{"id":59,"year":110,"num":60,"ans":2,"cat":"創傷","sub":"脊椎創傷","text":"35歲倒臥大樓中庭兩側跟骨腫脹變形，何者為非？","opts":["可能為墜樓","需考慮出血性休克","受傷機轉不會造成腰椎骨折","需頸椎保護"],"explain":"墜樓常合併腰椎骨折！","trap":1,"ch":""},{"id":60,"year":110,"num":61,"ans":3,"cat":"創傷","sub":"出血性休克","text":"出血性休克分級何者為非？","opts":["Class I<15%","Class II脈搏壓減少","Class III需要輸血","Class IV>30%"],"explain":"Class IV是>40%。","trap":1,"ch":""},{"id":61,"year":110,"num":62,"ans":2,"cat":"創傷","sub":"脊椎創傷","text":"脊髓損傷何者為非？","opts":["前脊髓：痛覺溫覺喪失本體保留","半切：同側運動喪失對側感覺喪失","脊髓休克：心跳緩脈灌流不足","中央脊髓：上肢比下肢嚴重"],"explain":"脊髓休克≠緩脈，那是神經性休克。","trap":1,"ch":""},{"id":62,"year":110,"num":63,"ans":1,"cat":"創傷","sub":"燒燙傷","text":"火場救出右臂曬傷胸腹正面紅腫水泡右下肢+生殖器死白焦黑，2度以上面積？","opts":["22.5%","28%","32.5%","37%"],"explain":"排除一度。胸腹正面18%+右下肢9%+生殖器1%=28%。","trap":0,"ch":""},{"id":63,"year":110,"num":64,"ans":3,"cat":"創傷","sub":"創傷評估","text":"致命三合症不包含？","opts":["凝血病變","酸血症","低體溫","低血氧"],"explain":"","trap":0,"ch":""},{"id":64,"year":110,"num":65,"ans":1,"cat":"創傷","sub":"燒燙傷","text":"大面積燒傷意識清楚何者最適當？","opts":["顏面燒傷可講話不用考慮插管","輸液不需加入一度面積","三度焦痂會有嚴重疼痛","修正布魯克公式增加補充量"],"explain":"","trap":0,"ch":""},{"id":65,"year":110,"num":66,"ans":3,"cat":"創傷","sub":"胸部創傷","text":"創傷性主動脈斷裂何者最適當？","opts":["常見位置胸腹主動脈交接","80-90%右側胸腔積血","最常見高處跌落","因動脈韌帶固定拉扯斷裂"],"explain":"","trap":0,"ch":""},{"id":66,"year":110,"num":67,"ans":2,"cat":"創傷","sub":"胸部創傷","text":"23歲左胸被刺一刀BP90/70 HR160何者最適當？","opts":["左邊無呼吸聲氣管偏移→心包膜填塞","雙邊有呼吸聲氣管無偏移→張力性氣胸","超音波檢查心臟周邊有無黑色積液","開放性傷口首要完全封閉胸壁"],"explain":"","trap":0,"ch":""},{"id":67,"year":110,"num":68,"ans":3,"cat":"創傷","sub":"腹部創傷","text":"腹部臟器創傷何者為非？","opts":["肝臟為刀刺傷最常受損","Kehr徵象脾臟損傷左肩痛","胰臟損傷外力直接撞擊上腹","小腸損傷初期需有腹膜炎徵象"],"explain":"初期可能無腹膜炎。","trap":1,"ch":""},{"id":68,"year":110,"num":69,"ans":0,"cat":"環境急症","sub":"熱急症","text":"20歲馬拉松後神智不清體溫42°C，何者最適當？","opts":["抽搐可用Lorazepam","降溫目標快速降到38°C以下","中暑皮膚通常乾燥無汗","4°C生理食鹽水比灑水吹風扇快"],"explain":"","trap":0,"ch":""},{"id":69,"year":110,"num":70,"ans":2,"cat":"環境急症","sub":"低體溫","text":"30歲困冷凍庫無生命徵象中心體溫20°C，何者最適當？","opts":["評估脈搏至少45秒","氣需求少插管無幫助","身體完全結凍口鼻冰封可停止急救","體溫回升30°C前不應給Epi"],"explain":"","trap":0,"ch":""},{"id":70,"year":110,"num":71,"ans":1,"cat":"婦產與新生兒","sub":"新生兒急救","text":"足月新生兒正壓通氣何者最適當？","opts":["無哭聲需立即正壓通氣","正壓給氧40-60下/分鐘","應使用100%氧氣","除非心跳<60否則不需正壓通氣"],"explain":"","trap":0,"ch":""},{"id":71,"year":110,"num":72,"ans":0,"cat":"婦產與新生兒","sub":"產婦急救","text":"產婦急救何者最適當？","opts":["維持正常去顫位置和電量","務必左側躺壓胸","點滴打在下肢","插管選較大號管"],"explain":"","trap":0,"ch":""},{"id":72,"year":110,"num":73,"ans":2,"cat":"環境急症","sub":"潛水傷害","text":"33歲潛水後12小時雙下肢無力，何者最適當？","opts":["血中氧氣氣泡阻塞","高濃度O2頭低腳高運送","可能減壓病需送高壓氧醫院","機艙壓力低於海平面"],"explain":"","trap":0,"ch":""},{"id":73,"year":110,"num":74,"ans":0,"cat":"內科急症","sub":"中毒","text":"70歲全身冒汗嘔吐大小便失禁濕囉音瞳孔1mm，最符合？","opts":["膽鹼性中毒","抗膽鹼性中毒","致幻覺性中毒","仿交感神經中毒"],"explain":"","trap":0,"ch":""},{"id":74,"year":110,"num":75,"ans":1,"cat":"內科急症","sub":"精神急症","text":"準自殺行為危險因子何者為非？","opts":["退休狀態","完美主義人格","分居狀態","曾有準自殺行為"],"explain":"完美主義非高危因子。","trap":1,"ch":""},{"id":75,"year":110,"num":76,"ans":1,"cat":"環境急症","sub":"毒蛇咬傷","text":"臺灣毒蛇何者正確？","opts":["眼鏡蛇毒牙為管牙","雨傘節神經毒最強","百步蛇引起腎衰竭出血","抗蛇毒血清共六種"],"explain":"","trap":0,"ch":""},{"id":76,"year":110,"num":77,"ans":1,"cat":"婦產與新生兒","sub":"小兒急症","text":"腸病毒71型重症病徵何者為非？","opts":["肌躍型抽搐","低血糖","肢體顫抖","心搏過速"],"explain":"","trap":0,"ch":""},{"id":77,"year":110,"num":78,"ans":1,"cat":"內科急症","sub":"中毒","text":"王太太服普拿疼1小時送急診何者為非？","opts":["主要毒性肝毒性3-4天最嚴重","到院馬上抽測ACT並立刻給解毒劑","NAC 8小時內使用最佳","NAC不應同時給活性炭"],"explain":"應服用4小時後才抽血。","trap":1,"ch":""},{"id":78,"year":110,"num":79,"ans":0,"cat":"內科急症","sub":"中毒","text":"CAGE口訣何者錯誤？","opts":["C代表Continuity","A代表Annoyance","G代表Guilty","E代表Eye opener"],"explain":"C=Cut down。","trap":1,"ch":""},{"id":79,"year":110,"num":80,"ans":2,"cat":"內科急症","sub":"精神急症","text":"36歲女性妄想有超能力聽到聲音半個月反覆，何者最適當？","opts":["臆斷為躁症發作","問答採用是非題","應詢問家族精神病史及毒品使用","救護員可依法強制約束送醫"],"explain":"","trap":0,"ch":""},{"id":80,"year":110,"num":81,"ans":1,"cat":"內科急症","sub":"中毒","text":"酒醉路倒半小時前喝酒送醫途中癲癇，何者最不可能？","opts":["電解質異常","酒精戒斷","創傷性腦損傷","低血糖"],"explain":"剛喝完不可能戒斷。","trap":1,"ch":""},{"id":81,"year":110,"num":82,"ans":3,"cat":"婦產與新生兒","sub":"小兒急救","text":"8歲30kg噎到心跳停止何者正確？","opts":["無氣囊ETT 5.5號以上","無氣囊管深度15cm以上","Epi每次0.03mg","恢復心跳收縮壓維持86mmHg以上"],"explain":"70+2×8=86mmHg。","trap":0,"ch":""},{"id":82,"year":110,"num":83,"ans":3,"cat":"婦產與新生兒","sub":"小兒急症","text":"何者最不像兒童虐待？","opts":["3歲翻落床腹部瘀傷","10月大練走跌倒股骨骨折","4歲跌倒早上傍晚才就醫","6歲跆拳道集訓雙前臂瘀青"],"explain":"","trap":0,"ch":""},{"id":83,"year":110,"num":84,"ans":0,"cat":"EMS系統與法規","sub":"空中救護","text":"相較固定翼直升機優點？","opts":["機動性高","安全性佳","醫療條件優","受天候影響小"],"explain":"","trap":0,"ch":""},{"id":84,"year":110,"num":85,"ans":1,"cat":"災難醫療","sub":"地震災害","text":"大地震後預期健康狀況何者為非？","opts":["急性心肌梗塞增加","孕婦流產早產較少見","嚴重傷患多合併多處創傷","頭胸嚴重壓傷立即死亡"],"explain":"流產早產會增加。","trap":1,"ch":""},{"id":85,"year":110,"num":86,"ans":3,"cat":"災難醫療","sub":"事故指揮系統","text":"ICS後勤組功能何者為非？","opts":["建立維護通訊系統","維護電力衛生設備","提供食物飲水","追蹤工作時間"],"explain":"追蹤工時屬財務組。","trap":1,"ch":""},{"id":86,"year":110,"num":87,"ans":0,"cat":"災難醫療","sub":"檢傷分類","text":"START法哪些傷患不易被誤判為重症？","opts":["孕婦","失聰傷患","下肢殘障傷患","過度換氣傷患"],"explain":"","trap":0,"ch":""},{"id":87,"year":110,"num":88,"ans":1,"cat":"災難醫療","sub":"毒化災","text":"不明化學物質外洩處置何者正確？","opts":["除污走廊設在下風上坡","熱區可做簡單呼吸道維持","暖區除污傷口以高壓水沖洗","固體毒化物立刻以清水清潔"],"explain":"","trap":0,"ch":""},{"id":88,"year":110,"num":89,"ans":3,"cat":"災難醫療","sub":"颱風災害","text":"颱風對醫療影響何者最不適當？","opts":["道路中斷需空中運輸","行車安全風險增加","醫療院所淹水影響運作","造成新興傳染病盛行"],"explain":"","trap":0,"ch":""},{"id":89,"year":110,"num":90,"ans":2,"cat":"災難醫療","sub":"大型活動","text":"大型活動醫療規劃何者最不適當？","opts":["保護自己安全首要","動線讓人員可順利往返","醫療站8分鐘路程內可到所有區域","預估傷患與活動種類時間溫度有關"],"explain":"應為5分鐘。","trap":1,"ch":""},{"id":90,"year":110,"num":91,"ans":0,"cat":"災難醫療","sub":"核生化","text":"核生化防護衣何者最適當？","opts":["C級不可在缺氧環境使用","化災防護衣可防輻射","毒物不明穿C級","C級包括供氧呼吸裝備"],"explain":"","trap":0,"ch":""},{"id":91,"year":110,"num":92,"ans":2,"cat":"災難醫療","sub":"輻射災害","text":"核電廠輻射外洩傷患除汙後運送何者最適當？","opts":["無輻射反應表示暴露低","仍需穿防輻射衣","嘔吐距暴露時間與輻傷嚴重度有關","至少會出現皮膚紅噁心嘔吐發燒"],"explain":"","trap":0,"ch":""},{"id":92,"year":110,"num":93,"ans":0,"cat":"災難醫療","sub":"事故指揮系統","text":"何者為執行部部長任務？","opts":["確保工作人員依安全規範執行","收集分析散發資訊","提供資源服務協助應變","保存災害復原損害記錄"],"explain":"","trap":0,"ch":""},{"id":93,"year":110,"num":94,"ans":3,"cat":"災難醫療","sub":"檢傷分類","text":"大量傷患四級顏色何者錯誤？","opts":["紅色重傷優先處理","黃色中傷暫緩","綠色輕傷延遲","黑色瀕死全世界最後處治"],"explain":"","trap":0,"ch":""},{"id":94,"year":110,"num":95,"ans":1,"cat":"災難醫療","sub":"事故應變","text":"事故應變現場作業何者錯誤？","opts":["現場評估4S","集結檢傷屬初級檢傷","現場救護3T","確適醫療不需再轉介"],"explain":"","trap":0,"ch":""},{"id":95,"year":110,"num":96,"ans":2,"cat":"災難醫療","sub":"後送原則","text":"大量傷患後送原則何者為非？","opts":["輕症初期湧入消耗能量","輪送適用醫院能力相似","醫院超負荷採繞道原則","群送適合輕症送同家醫院"],"explain":"","trap":0,"ch":""},{"id":96,"year":110,"num":97,"ans":2,"cat":"災難醫療","sub":"後送原則","text":"後送小組職責何者為非？","opts":["後送為三大重點之一","後送管制員了解各院能量","後送組長應將輕傷分配不同醫院","救護紀錄隨傷患送到醫院"],"explain":1,"trap":0,"ch":""},{"id":97,"year":110,"num":98,"ans":3,"cat":"災難醫療","sub":"事故應變","text":"現場救護權責何者最適當？","opts":["傷患脫困後馬上轉送","無法行走由檢傷人員搬運","明顯死亡先蒐證","醫療派遣員與後送管制員溝通"],"explain":"","trap":0,"ch":""},{"id":98,"year":110,"num":99,"ans":3,"cat":"災難醫療","sub":"運動賽事","text":"運動賽事場邊救護何者正確？","opts":["冰上曲棍球須著冰刀","柔道冷凍噴劑必備","摔角救護人員穿短褲","橄欖球醫護進場比賽繼續"],"explain":"","trap":0,"ch":""},{"id":99,"year":110,"num":100,"ans":0,"cat":"EMS系統與法規","sub":"感染防護","text":"感染鏈中最容易打斷？","opts":["傳染途徑","易感宿主","傳染病源","傳染窩"],"explain":"","trap":0,"ch":""},{"id":100,"year":111,"num":1,"ans":2,"cat":"EMS系統與法規","sub":"心理學","text":"不想進火場而參訓EMTP，根據馬斯洛需求理論屬於？","opts":["生理需求","愛與歸屬","安全需求","自我實現"],"explain":"","trap":0,"ch":""},{"id":101,"year":111,"num":2,"ans":3,"cat":"EMS系統與法規","sub":"後送原則","text":"關於分流政策與繞道政策何者正確？","opts":["分流指重症送確切治療醫院","繞道指輕症避開壅塞醫院","高能量外傷應分流至無壅塞醫院","腦中風病人應繞道至栓溶醫院"],"explain":"","trap":0,"ch":""},{"id":102,"year":111,"num":3,"ans":0,"cat":"EMS系統與法規","sub":"法律責任","text":"救護行為構成過失的四項要件，何者最不符合？","opts":["下班CPR致肋骨骨折病人死亡","氧氣導管插入氣切口致張力性氣胸","送醫車禍病人飛出車外死亡","插管誘發嘔吐致吸入性肺炎"],"explain":"","trap":0,"ch":""},{"id":103,"year":111,"num":4,"ans":1,"cat":"EMS系統與法規","sub":"法律責任","text":"16歲女兒想跳樓母親拒絕救護入內，最適當處置？","opts":["母親簽名後即可離開","母親不能代理事實行為應持續溝通","必須堅持見到病人才可返隊","符合緊急避難可強制進入"],"explain":"","trap":0,"ch":""},{"id":104,"year":111,"num":5,"ans":1,"cat":"EMS系統與法規","sub":"醫療指導","text":"有關台灣醫療指導制度何者為非？","opts":["醫療指導醫師實施辦法為衛福部制訂","線上醫療指導由消防局聘任醫師執行","消防主管機關應指定醫療指導醫師","訂定品質指標為醫療指導醫師法定任務"],"explain":"應由衛生主管機關指定。","trap":1,"ch":""},{"id":105,"year":111,"num":6,"ans":2,"cat":"EMS系統與法規","sub":"醫學倫理","text":"醫療倫理四基本原則不包括？","opts":["尊重自主","行善","利他","公正"],"explain":"","trap":0,"ch":""},{"id":106,"year":111,"num":7,"ans":0,"cat":"EMS系統與法規","sub":"法規","text":"何者最不可能是高級救護技術員法定緊急救護範圍？","opts":["活動醫療站給頭痛病人普拿疼","偏遠地區對高山肺水腫插管","送醫途中對不穩定VT做cardioversion","依預立流程執行TOR"],"explain":"","trap":0,"ch":""},{"id":107,"year":111,"num":8,"ans":1,"cat":"EMS系統與法規","sub":"感染防護","text":"有關新冠病毒傳播何者為非？","opts":["主要為飛沫傳染","濕洗手不具阻斷防護作用","可能經結膜感染","抽痰會產生氣溶膠"],"explain":"濕洗手確實有效。","trap":1,"ch":""},{"id":108,"year":111,"num":9,"ans":0,"cat":"EMS系統與法規","sub":"品質管理","text":"107年DA-CPR品管指標何者為非？","opts":["OHCA辨識比率設定95%","辨識後壓胸比率設定60%","辨識時間中位數<120秒","報案到CPR時間<180秒"],"explain":"指標為75%非95%。","trap":1,"ch":""},{"id":109,"year":111,"num":10,"ans":0,"cat":"EMS系統與法規","sub":"派遣系統","text":"派遣員初始流程四大戒律何者為非？","opts":["他現場有個人需要幫忙","他大概幾歲","他意識是否清醒","他呼吸是否正常"],"explain":"","trap":0,"ch":""},{"id":110,"year":111,"num":11,"ans":2,"cat":"EMS系統與法規","sub":"品質管理","text":"GRA增加OHCA存活的十個步驟第一步最重要基石？","opts":["落實快速派遣","高品質CPR","建立OHCA登錄系統","完整AED部署"],"explain":"","trap":0,"ch":""},{"id":111,"year":111,"num":12,"ans":2,"cat":"基礎醫學","sub":"新生兒生理","text":"新生兒出生脫離母體循環何者為非？","opts":["體循環阻力上升","主動脈左心壓力上升","肺循環血管阻力上升","右心壓力下降"],"explain":"肺循環阻力下降！","trap":1,"ch":""},{"id":112,"year":111,"num":13,"ans":2,"cat":"EMS系統與法規","sub":"教學方法","text":"科爾伯格道德發展理論何者為非？","opts":["互惠概念屬天真行為","好孩子心理屬習俗水準","法律秩序屬後習俗水準","由良知決定屬後習俗水準"],"explain":"法律秩序屬習俗水準。","trap":1,"ch":""},{"id":113,"year":111,"num":14,"ans":0,"cat":"基礎醫學","sub":"呼吸道處置","text":"有關抽吸何者為非？","opts":["病人心跳加快表示缺氧須停止","抽吸可能引發肺塌陷","抽吸可使顱內壓上升","抽吸可導致血壓升高心律不整"],"explain":"缺氧致迷走反射→心跳變慢。","trap":1,"ch":""},{"id":114,"year":111,"num":15,"ans":3,"cat":"基礎醫學","sub":"呼吸監測","text":"二氧化碳濃度圖儀解析何者為非？","opts":["突然降至0表示管路滑脫","CPR中維持10-20mmHg","CPR後突然上升疑似ROSC","呈現極不規則的圖形"],"explain":"","trap":0,"ch":""},{"id":115,"year":111,"num":16,"ans":3,"cat":"基礎醫學","sub":"細胞生物","text":"何者是細胞的發電機可進行有氧代謝？","opts":["高基氏體","內質網","中心粒","粒線體"],"explain":"","trap":0,"ch":""},{"id":116,"year":111,"num":17,"ans":2,"cat":"基礎醫學","sub":"呼吸評估","text":"2歲兒童誤食硬幣胸部聽診異常呼吸音何者為非？","opts":["喘鳴音為連續性位於頸部","為空氣通過狹窄上呼吸道","也常發現於腫瘤氣管內結核","以吸氣期為主嚴重時呼氣期也會"],"explain":"C選項說「也常發現於腫瘤」是正確的(非錯誤)。","trap":1,"ch":""},{"id":117,"year":111,"num":18,"ans":1,"cat":"病史詢問與評估","sub":"呼吸道評估","text":"評估呼吸道是否暢通何者為非？","opts":["評估是否順暢說話","檢查血氧>94%","檢查是否有stridor","檢視口腔有無異物"],"explain":"血氧正常不等於呼吸道暢通。","trap":1,"ch":""},{"id":118,"year":111,"num":19,"ans":3,"cat":"病史詢問與評估","sub":"臨床決策","text":"臨床決策六個R步驟何者為非？","opts":["評估傷病患Read the patient","評估環境Read the scene","診斷治療React","回報指導醫師Report to medical director"],"explain":"","trap":0,"ch":""},{"id":119,"year":111,"num":20,"ans":1,"cat":"心血管急症","sub":"PAD系統","text":"PAD計畫四大要素何者為非？","opts":["醫療專業人員規畫監督","訓練去顫器管理人員負責急救","與當地EMS緊密配合","定期品管回顧"],"explain":"應訓練一般民眾。","trap":1,"ch":""},{"id":120,"year":111,"num":21,"ans":2,"cat":"心血管急症","sub":"ECMO","text":"關於ECMO何者為是？","opts":["VA-ECMO僅取代肺臟功能","VV-ECMO送回動脈支持心肺","頭外傷合併顱內出血72hr內為禁忌","ECMO僅用於心臟疾病"],"explain":"","trap":0,"ch":""},{"id":121,"year":111,"num":22,"ans":1,"cat":"病史詢問與評估","sub":"意識評估","text":"AEIOUTIPS意識不清鑑別何者為非？","opts":["A例如酒精","E例如觸電","O例如缺氧","I例如中毒"],"explain":"E=Epilepsy/Endocrine非Electric shock。","trap":1,"ch":""},{"id":122,"year":111,"num":23,"ans":3,"cat":"病史詢問與評估","sub":"SOAP溝通","text":"SOAP中何項屬於Objective data？","opts":["平時使用藥物","每次胸痛發作時間","家屬提供最後正常時間","意識狀態"],"explain":"","trap":0,"ch":""},{"id":123,"year":111,"num":24,"ans":3,"cat":"EMS系統與法規","sub":"損害預防","text":"損害預防3E何者為非？","opts":["法律強制","教育訓練","安全設計","建立創傷中心"],"explain":"","trap":0,"ch":""},{"id":124,"year":111,"num":25,"ans":0,"cat":"創傷","sub":"胸部創傷","text":"50歲女性跌落撞右後背胸壁吸氣凹陷何者為非？","opts":["病人不需要轉送創傷中心","超音波正常可能後腹腔出血","可以給予正壓給氧","常會發展為呼吸衰竭"],"explain":"連枷胸應送創傷中心。","trap":1,"ch":""},{"id":125,"year":111,"num":26,"ans":1,"cat":"創傷","sub":"創傷評估","text":"外傷現場檢傷分類指引何者為是？","opts":["包括年紀性別生命徵象受傷機轉","過度檢傷造成創傷中心壅擠","對老人敏感度較高","過度檢傷應越低越好"],"explain":"","trap":0,"ch":""},{"id":126,"year":111,"num":27,"ans":0,"cat":"基礎醫學","sub":"心血管生理","text":"關於脈壓何者為是？","opts":["脈壓主要反映動脈系統張力","出血性休克脈壓會變寬","對周邊灌流變化不敏感","定義為收縮壓加上舒張壓"],"explain":"","trap":0,"ch":""},{"id":127,"year":111,"num":28,"ans":3,"cat":"創傷","sub":"腹部創傷","text":"50歲刺傷腹部臟器外露BP70/30 HR150何者為非？","opts":["收縮壓可控制80-90mmHg","不需要戴頸圈","需要大量輸血","可先快速給予2000ml林格氏液"],"explain":"穿刺傷用允許性低血壓不給2L。","trap":1,"ch":""},{"id":128,"year":111,"num":29,"ans":0,"cat":"創傷","sub":"頭部創傷","text":"頭部創傷到院前處置何者為是？","opts":["合併低血容休克給輸液維持SBP≥90","GCS<9應執行插管即使延長送醫","頭皮撕裂傷出血有限優先處理其他","過度換氣常規維持EtCO2 40-45"],"explain":"","trap":0,"ch":""},{"id":129,"year":111,"num":30,"ans":3,"cat":"創傷","sub":"脊椎創傷","text":"脊椎創傷到院前處置何者為是？","opts":["早期高劑量類固醇改善預後","低血壓優先考慮神經性休克","長背板比鏟式擔架效果好","胸部穿刺傷意識清楚不需常規脊椎固定"],"explain":"","trap":0,"ch":""},{"id":130,"year":111,"num":31,"ans":2,"cat":"創傷","sub":"脊椎創傷","text":"神經性休克和脊髓性休克何者為非？","opts":["脊髓性休克是暫時性失能","神經性休克表現溫暖緩脈低血壓","脊髓性休克通常T6以上才產生","神經性休克屬分佈性休克"],"explain":"(C)描述的是神經性休克。","trap":1,"ch":""},{"id":131,"year":111,"num":32,"ans":1,"cat":"創傷","sub":"胸部創傷","text":"胸腔超音波何者為是？","opts":["M-mode barcode sign一定有氣胸","看到lung point一定有氣胸","M-mode seashore sign一定無氣胸","看到A line一定無氣胸"],"explain":"","trap":0,"ch":""},{"id":132,"year":111,"num":33,"ans":0,"cat":"創傷","sub":"胸部創傷","text":"胸部創傷何者為非？","opts":["兒童比成人容易肋骨骨折","主動脈破裂位置在動脈韌帶","第五肋間腋前線成功率較高","肺挫傷初期症狀不明顯"],"explain":"兒童胸壁柔軟不易骨折。","trap":1,"ch":""},{"id":133,"year":111,"num":34,"ans":0,"cat":"創傷","sub":"腹部創傷","text":"腹部創傷何者為是？","opts":["小腸損傷初期無腹膜炎無法排除","胰臟損傷CT不易評估靠澱粉酶","脾臟60%有Kehr徵候","非第9-12肋間不需考慮腹部"],"explain":"小腸損傷初期可無腹膜炎。","trap":0,"ch":""},{"id":134,"year":111,"num":35,"ans":1,"cat":"創傷","sub":"腹部創傷","text":"34歲男性車禍蒼白濕冷左腰瘀青BP70/40 HR130何者為是？","opts":["後腹腔包含腹主動脈十二指腸腎臟胰臟","eFAST無法準確檢查後腹腔出血","脾臟撕裂一定可在脾腎交界看到積液","骨盆僅需橫向掃描"],"explain":"","trap":0,"ch":""},{"id":135,"year":111,"num":36,"ans":2,"cat":"創傷","sub":"骨骼肌肉創傷","text":"骨折脫臼合併周邊神經損傷何者為非？","opts":["肘關節脫臼→尺神經","遠端肱骨骨折→橈神經","膝關節脫臼→腓神經","髖關節脫臼→坐骨神經"],"explain":"","trap":0,"ch":""},{"id":136,"year":111,"num":37,"ans":3,"cat":"創傷","sub":"骨骼肌肉創傷","text":"骨骼肌肉創傷何者為是？","opts":["鎖骨骨折80%在外側三分之一","拳擊者骨折最常見第三掌骨","髖關節後脫臼致患肢縮短外轉","膝關節後脫臼容易傷膕動脈"],"explain":"","trap":0,"ch":""},{"id":137,"year":111,"num":38,"ans":3,"cat":"創傷","sub":"燒燙傷","text":"自撞安全島引擎起火痰液有炭粒眉毛鼻毛焦，何者為是？","opts":["聲門以上灼傷有stridor應放LMA","聲門以下灼傷症狀又快又急","一氧化碳10-20%就會昏迷","防止休克盡速靜脈注射輸液"],"explain":"","trap":0,"ch":""},{"id":138,"year":111,"num":39,"ans":1,"cat":"創傷","sub":"電灼傷","text":"台電工人觸電倒地四肢抽搐何者為是？","opts":["用樹枝將電線撥開","皮膚有牛眼形傷口電流出口潰爛","輸液以葡萄糖液為主","神經組織受電損傷影響較低"],"explain":"","trap":0,"ch":""},{"id":139,"year":111,"num":40,"ans":1,"cat":"創傷","sub":"燒燙傷","text":"KTV火警臉部頸部燒傷咳出碳粒痰SpO2 95%何者為是？","opts":["一氧化碳中毒用血氧機確認","吸入性灼傷或呼吸道腫脹考慮插管","無其他燒傷處為中度灼傷","環狀灼傷在此病人不會發生"],"explain":"CO中毒SpO2會偽高。","trap":0,"ch":""},{"id":140,"year":111,"num":41,"ans":3,"cat":"創傷","sub":"止血","text":"C.A.T.戰術止血帶正確順序？","opts":["放置→旋緊→拉緊→記時間","放置→拉緊→記時間→旋緊","旋緊→拉緊→放置→記時間","放置→拉緊→旋緊→記時間"],"explain":"","trap":0,"ch":""},{"id":141,"year":111,"num":42,"ans":2,"cat":"創傷","sub":"止血","text":"止血方式何者為是？","opts":["直接加壓不如止血點止血","加壓包紮纏越寬止血越好","止血敷料直接加壓很有效","止血帶最後手段每30分鐘鬆開"],"explain":"","trap":0,"ch":""},{"id":142,"year":111,"num":43,"ans":2,"cat":"創傷","sub":"出血性休克","text":"35歲車禍蒼白濕冷E4V3M5 HR124 BP110/82 SpO2 92%最可能第幾期？","opts":["第一期<15%","第二期15-30%","第三期31-40%","第四期>40%"],"explain":"意識混亂+心跳快+SpO2低→第三期。","trap":0,"ch":""},{"id":143,"year":111,"num":44,"ans":0,"cat":"創傷","sub":"胸部創傷","text":"右側張力性氣胸處置後再度呼吸困難血壓下降何者最適當？","opts":["生命徵象不穩重新初級評估","再次針刺減壓在右腋中線第五肋間","先安排CT確定其他出血","再插一根胸管"],"explain":"","trap":0,"ch":""},{"id":144,"year":111,"num":45,"ans":2,"cat":"創傷","sub":"頭部創傷","text":"50歲車禍未戴帽頭外傷瞳孔不等大何者為非？","opts":["清明期可能硬腦膜上出血","顱內出血致收縮壓升高脈搏變慢","血壓太高需控制SBP 80-90mmHg","血氧不佳需給氧維持呼吸道"],"explain":"腦外傷不應降至80-90！","trap":1,"ch":""},{"id":145,"year":111,"num":46,"ans":1,"cat":"創傷","sub":"脊椎創傷","text":"NEXUS Low Risk Criteria何者正確？","opts":["E向前伸頸時不痛","X無其他劇痛傷勢","U向上提頸不痛","S感覺皆正常"],"explain":"","trap":0,"ch":""},{"id":146,"year":111,"num":47,"ans":0,"cat":"創傷","sub":"胸部創傷","text":"張力性氣胸針刺減壓三要件不包括？","opts":["意識不清到對疼痛無反應","嚴重呼吸窘迫","患側呼吸音變小","SBP<90mmHg"],"explain":"意識不清非必要條件。","trap":1,"ch":""},{"id":147,"year":111,"num":48,"ans":3,"cat":"創傷","sub":"出血性休克","text":"創傷出血性死亡三合症何者正確？","opts":["低血鈣低血氧高腦壓","低血氧酸血症凝血異常","低血鈣低體溫高腦壓","低體溫酸血症凝血異常"],"explain":"","trap":0,"ch":""},{"id":148,"year":111,"num":49,"ans":3,"cat":"內科急症","sub":"呼吸急症","text":"COPD肺氣腫與慢性支氣管炎何者不正確？","opts":["肺氣腫瘦胸廓拉長桶狀胸","慢性支氣管炎慢性發紺","肺氣腫咳嗽無痰乾咳","慢性支氣管炎較常噘嘴呼吸"],"explain":"噘嘴呼吸是肺氣腫。","trap":1,"ch":""},{"id":149,"year":111,"num":50,"ans":3,"cat":"內科急症","sub":"神經急症","text":"50歲癲癇持續發作意識不清發紺，最優先處置？","opts":["測血氧用BVM給氧","確認意識施打Midazolam","給口咽呼吸道保護頸椎","打開呼吸道確認脈搏"],"explain":"","trap":0,"ch":""},{"id":150,"year":111,"num":51,"ans":3,"cat":"心血管急症","sub":"心電圖判讀","text":"12導程心電圖判讀何者正確？","opts":["右心房擴大P波變寬稱P mitrale","ST-T變化需連續三個導程","V3V4對應左心室側壁","急性心肌缺血出現hyperacute T"],"explain":"","trap":0,"ch":""},{"id":151,"year":111,"num":52,"ans":2,"cat":"內科急症","sub":"腹部急症","text":"45歲女性長期抽菸喝酒凌晨上腹痛何者正確？","opts":["急性肝炎常以上腹痛表現","疼痛位置不會是闌尾炎","可能是膽結石東方人以色素結石為主","十二指腸潰瘍進食會加重"],"explain":"","trap":0,"ch":""},{"id":152,"year":111,"num":53,"ans":0,"cat":"內科急症","sub":"腫瘤急症","text":"50歲女性右側乳癌做過乳房淋巴切除發燒昏迷何者為非？","opts":["可選右上肢建立IV補充輸液","仍須排除低血糖嗎啡過量","須詢問腫瘤分期治療近況","發燒可能與白血球低下有關"],"explain":"淋巴切除側不可打IV。","trap":1,"ch":""},{"id":153,"year":111,"num":54,"ans":3,"cat":"內科急症","sub":"過敏反應","text":"44歲農夫工作20分呼吸困難BP80/50何者為非？","opts":["需詢問氣喘心臟疾病病史","沒有紅疹也可考慮給Epi","可能合併腹絞痛噁心嘔吐","黏膜眼皮水腫不適合給輸液"],"explain":"過敏性休克仍需輸液。","trap":1,"ch":""},{"id":154,"year":111,"num":55,"ans":0,"cat":"基礎醫學","sub":"呼吸監測","text":"插管後EtCO2穩定50-60mmHg最正確作法？","opts":["維持6秒一次通氣","改3-4秒一次增加潮氣量","數值高表示ROSC停止CPR","單側插管每循環外拔一公分"],"explain":"CPR中高EtCO2不代表ROSC。","trap":1,"ch":""},{"id":155,"year":111,"num":56,"ans":3,"cat":"內科急症","sub":"腹部急症","text":"67歲男性突然嚴重下背痛蒼白盜汗HR130 BP80/50最可能？","opts":["急性心肌梗塞","乙狀結腸憩室破裂","腎結石","腹主動脈瘤破裂"],"explain":"","trap":0,"ch":""},{"id":156,"year":111,"num":57,"ans":1,"cat":"心血管急症","sub":"主動脈剝離","text":"主動脈剝離何者為非？","opts":["可能造成MI心包膜填塞","所有剝離皆應早期手術","CT有很高診斷率","血壓高建議用β blocker"],"explain":"","trap":0,"ch":""},{"id":157,"year":111,"num":58,"ans":3,"cat":"心血管急症","sub":"ACLS","text":"2020 ACLS成人心臟停止何者為非？","opts":["不可電擊心律儘速給Epi","VF雙相電擊依製造商建議","第三次電擊後可給Lidocaine","去顫器到須等五循環才分析"],"explain":"應盡快分析不需等！","trap":1,"ch":""},{"id":158,"year":111,"num":59,"ans":2,"cat":"內科急症","sub":"泌尿急症","text":"泌尿生殖急症何者為是？","opts":["壞死性筋膜炎僅需抗生素","嵌頓性疝氣不會腹脹嘔吐","睪丸扭轉突發劇痛無紅腫須早手術","副睪炎抬起睪丸不能緩解"],"explain":"","trap":0,"ch":""},{"id":159,"year":111,"num":60,"ans":3,"cat":"內科急症","sub":"腫瘤急症","text":"65歲肺癌右側胸痛頸部水腫頸靜脈怒張胸壁靜脈擴張何者為是？","opts":["續發性張力性氣胸需針刺減壓","腫瘤溶解症候群需輸液","心包膜填塞需穿刺","上腔靜脈症候群抬高頭部上肢給氧"],"explain":"","trap":0,"ch":""},{"id":160,"year":111,"num":61,"ans":3,"cat":"心血管急症","sub":"心電圖判讀","text":"50歲胸悶冒冷汗12導程心電圖何者為是？","opts":["下壁MI應聯絡心導管醫院","應立即口服Aspirin 100mg","需確認心肌酵素升高才再灌流","到院後儘快PCI 90分鐘內打通"],"explain":"","trap":0,"ch":""},{"id":161,"year":111,"num":62,"ans":3,"cat":"病史詢問與評估","sub":"理學檢查","text":"何種理學檢查無法協助判斷是否給大量輸液？","opts":["頸靜脈是否怒張","是否端坐呼吸","聽診是否濕囉音","是否Kussmaul呼吸"],"explain":"","trap":0,"ch":""},{"id":162,"year":111,"num":63,"ans":2,"cat":"病史詢問與評估","sub":"生命徵象","text":"水銀血壓計何種情況代表舒張壓？","opts":["壓脈帶壓力升高雜音消失","壓力升高雜音出現","壓力下降雜音消失","壓力下降雜音出現"],"explain":"","trap":0,"ch":""},{"id":163,"year":111,"num":64,"ans":2,"cat":"創傷","sub":"休克分類","text":"關於休克何者正確？","opts":["心包膜填塞屬心因性休克","張力性氣胸屬再分佈性休克","休克四肢不一定冰冷","休克心跳變快只有神經性休克緩脈"],"explain":"","trap":0,"ch":""},{"id":164,"year":111,"num":65,"ans":3,"cat":"內科急症","sub":"腦中風","text":"70歲女性早上發現右側無力何者最適當？","opts":["發作時間明確送最近可施打tPA醫院","符合條件應在08:00前施打完","曾服抗凝血劑不建議施打tPA","事先通報也可提升tPA施打率"],"explain":"","trap":0,"ch":""},{"id":165,"year":111,"num":66,"ans":1,"cat":"心血管急症","sub":"心導管","text":"何種情形最不需心導管介入？","opts":["90歲II III aVF ST上升","38歲女性口服避孕藥猝死ROSC S1Q3T3","70歲冠心病ROSC無ST上升","45歲NSTEMI待床時肺水腫VT"],"explain":"S1Q3T3=PE非MI。","trap":1,"ch":""},{"id":166,"year":111,"num":67,"ans":3,"cat":"內科急症","sub":"內分泌急症","text":"內分泌系統何者正確？","opts":["黏液性水腫是甲狀腺亢進","胰臟僅有內分泌功能","DKA治療目標是血糖恢復正常","HHNS比DKA容易昏迷"],"explain":"","trap":0,"ch":""},{"id":167,"year":111,"num":68,"ans":3,"cat":"內科急症","sub":"神經急症","text":"顏面神經何者正確？","opts":["可分上中下三支","周邊性合併舌頭後三分之一味覺喪失","貝爾氏麻痺多數永久後遺","中樞性僅對側臉下半部麻痺"],"explain":"","trap":0,"ch":""},{"id":168,"year":111,"num":69,"ans":1,"cat":"環境急症","sub":"溺水","text":"溺水救護病患溺水10分鐘水溫8°C何者正確？","opts":["不需考量其他因素","嚴重喉部痙攣約15%","延長脈搏評估增加藥物量","水溫低導致死亡率上升"],"explain":"","trap":0,"ch":""},{"id":169,"year":111,"num":70,"ans":3,"cat":"環境急症","sub":"野外救護","text":"山區墜落開放性骨折特別考量何者不屬於？","opts":["長背板止血帶搬運的好處危害","天氣是否需避免失溫","骨折是否先固定復位","直升機費用是否負擔得起"],"explain":"","trap":0,"ch":""},{"id":170,"year":111,"num":71,"ans":2,"cat":"內科急症","sub":"精神急症","text":"76歲凌晨胡言亂語精神異常無精神科病史何者最適當？","opts":["有聽幻覺應為思覺失調症","年齡性別為思覺失調高盛行率","GCS滿分但意識混亂應先測血糖","心跳快與情緒激動有關需做心電圖"],"explain":"","trap":0,"ch":""},{"id":171,"year":111,"num":72,"ans":3,"cat":"內科急症","sub":"精神急症","text":"四位自殺病人風險評估何者錯誤？","opts":["22歲分手賭氣服安眠藥高風險為單身","70歲退休獨居上吊高風險含老年男性","33歲憂鬱合併酒精成癮高風險含物質濫用","35歲無病史家庭好事業有成無明顯高風險"],"explain":"仍需評估！","trap":1,"ch":""},{"id":172,"year":111,"num":73,"ans":2,"cat":"內科急症","sub":"老年急症","text":"老年人心衰竭常見症狀何者不是？","opts":["疲勞","夜尿","皮膚搔癢傷口癒合緩慢","食慾不振肝腫大腹水"],"explain":"","trap":0,"ch":""},{"id":173,"year":111,"num":74,"ans":3,"cat":"婦產與新生兒","sub":"新生兒急救","text":"新生兒使用腎上腺素何者為非？","opts":["很少使用到急救藥物","不論途徑均稀釋10倍","可3-5分鐘重覆給予","經臍靜脈是最快速方便途徑"],"explain":"骨內注射更快。","trap":1,"ch":""},{"id":174,"year":111,"num":75,"ans":2,"cat":"婦產與新生兒","sub":"產婦急救","text":"產婦羊水栓塞何者為非？","opts":["常見突然缺氧低血壓休克凝血障礙","可能為羊水雜質經子宮頸靜脈進入","胎兒娩出後不可能發生","最好犯於多胞胎第一產程"],"explain":"產後仍可能發生。","trap":1,"ch":""},{"id":175,"year":111,"num":76,"ans":2,"cat":"環境急症","sub":"毒蛇咬傷","text":"臺灣毒蛇何者為非？","opts":["抗蛇毒血清共四種","最易造成腎衰竭為鎖鍊蛇","眼鏡蛇毒牙為管牙","眼鏡蛇咬傷局部腫脹腐爛"],"explain":"眼鏡蛇=溝牙。","trap":1,"ch":""},{"id":176,"year":111,"num":77,"ans":2,"cat":"婦產與新生兒","sub":"產婦急救","text":"40歲孕婦產後大出血最正確處置？","opts":["將手深入產道加壓止血","按摩子宮底促進陰道收縮","避免會陰檢查給大量輸液","讓胎兒吸吮促進子宮收縮素"],"explain":"","trap":0,"ch":""},{"id":177,"year":111,"num":78,"ans":1,"cat":"內科急症","sub":"中毒","text":"服用大花曼陀羅中毒何者為非？","opts":["心搏過速瞳孔擴大","全身皮膚潮濕口水淚液增多","呼吸道通氣循環支持性療法","症狀嚴重有physostigmine",""],"explain":"抗膽鹼=乾燥非潮濕。","trap":1,"ch":""},{"id":178,"year":111,"num":79,"ans":3,"cat":"婦產與新生兒","sub":"小兒急症","text":"哮吼常見症狀何者為非？","opts":["犬吠咳嗽聲","呼吸出現stridor","聲音沙啞","呼吸出現wheezing"],"explain":"哮吼是stridor非wheezing。","trap":1,"ch":""},{"id":179,"year":111,"num":80,"ans":1,"cat":"環境急症","sub":"潛水傷害","text":"45歲潛水教練溺水意識不清何者最不適當？","opts":["氮醉是可能臆斷","肺音正常可排除空氣栓塞","減壓病惡化是可能臆斷","低體溫致心室心律不整也可能"],"explain":"肺音正常不能排除。","trap":1,"ch":""},{"id":180,"year":111,"num":81,"ans":0,"cat":"環境急症","sub":"高山症","text":"室友在排雲山莊嚴重頭痛失眠何者最不適當？","opts":["報告有無呼吸道症狀疲憊等","丹木斯也可用來治療","出現呼吸困難粉紅泡泡立即下山","步態不穩意識不清給氧送有加壓艙醫院"],"explain":"","trap":0,"ch":""},{"id":181,"year":111,"num":82,"ans":3,"cat":"環境急症","sub":"低體溫","text":"低體溫病人救護何者最不適當？","opts":["心律監測可能發現PEA或Osborn波","輕柔處置避免誘發Vf","體溫未接近正常不假設已死亡","中斷壓胸評估脈搏不超過10秒"],"explain":"低體溫應評估30-45秒。","trap":1,"ch":""},{"id":182,"year":111,"num":83,"ans":2,"cat":"EMS系統與法規","sub":"感染防護","text":"COVID-19何者最適當？","opts":["症狀以腸胃道為主","可能傳播途徑為糞口","避免人潮擁擠維持手部衛生戴口罩","防護裝備越高越好"],"explain":"","trap":0,"ch":""},{"id":183,"year":111,"num":84,"ans":0,"cat":"婦產與新生兒","sub":"小兒評估","text":"PAT兒童評估三角不屬於？","opts":["昏迷指數","膚色循環","肌肉張力","呼吸作功"],"explain":"","trap":0,"ch":""},{"id":184,"year":111,"num":85,"ans":2,"cat":"婦產與新生兒","sub":"小兒急救","text":"6歲病童突然心跳加快VF首次電擊劑量？","opts":["同步整流2J/kg","PSVT不得迷走神經刺激","VF首次2J/kg","再次嘗試3J/kg"],"explain":"","trap":0,"ch":""},{"id":185,"year":111,"num":86,"ans":1,"cat":"災難醫療","sub":"檢傷分類","text":"關於三級檢傷何者為非？","opts":["現場檢傷稱初級檢傷","BASIC口訣B=Bleeding A=Airway S=Shock I=Ice C=Classification","SAVE為次級檢傷","醫院內檢傷為三級檢傷"],"explain":"I=Immobilize非Ice。","trap":1,"ch":""},{"id":186,"year":111,"num":87,"ans":1,"cat":"災難醫療","sub":"輻射災害","text":"輻射傷害現場救護何者錯誤？","opts":["適當防護不會嚴重危害","有生命危險先除汙再急救","有生命危險儘速送最近醫院","輻射劑量背景值2-3倍以上繼續清洗"],"explain":"有生命危險先急救！","trap":1,"ch":""},{"id":187,"year":111,"num":88,"ans":0,"cat":"災難醫療","sub":"毒化災","text":"危害物質對健康影響何者最正確？","opts":["有機磷造成神經系統異常甚至心肺衰竭","氰化物使血液無法攜帶氧氣","所有毒化物可用清水除汙","毒化物不會經皮膚吸收"],"explain":"","trap":0,"ch":""},{"id":188,"year":111,"num":89,"ans":3,"cat":"災難醫療","sub":"運動賽事","text":"大型運動醫療救護何者錯誤？","opts":["參賽年齡與常見傷害發生率有關","需了解比賽規則及醫護規則","多數項目需裁判許可才能處理","工作人員裁判須自行就醫"],"explain":"所有人都需醫療服務。","trap":1,"ch":""},{"id":189,"year":111,"num":90,"ans":1,"cat":"EMS系統與法規","sub":"感染防護","text":"感染鏈六個條件何者為非？","opts":["感染源為其中條件","傳染途徑最難防範","傳染窩為感染源生存處所","易感宿主指能被感染的人"],"explain":"傳染途徑最容易打斷。","trap":1,"ch":""},{"id":190,"year":111,"num":91,"ans":0,"cat":"災難醫療","sub":"核生化","text":"生物戰劑何者為是？","opts":["可能大量傷亡但傳播有限制","分A B C D四類","炭疽黃熱天花皆A類","費用製程複雜昂貴"],"explain":"","trap":0,"ch":""},{"id":191,"year":111,"num":92,"ans":2,"cat":"災難醫療","sub":"核生化","text":"中學宿舍20%學生發病不明液體，防護衣何者恰當？","opts":["自助餐廳清掃著D級","救護技術員著D級","校護著C級以上","醫院人員著A級"],"explain":"","trap":0,"ch":""},{"id":192,"year":111,"num":93,"ans":0,"cat":"災難醫療","sub":"地震災害","text":"天然災害何者為是？","opts":["屍體並非疾病來源","水災主管機關為內政部","地震非創傷病患較少","72小時後存活率大幅降低應停止"],"explain":"","trap":0,"ch":""},{"id":193,"year":111,"num":94,"ans":2,"cat":"EMS系統與法規","sub":"空中救護","text":"何者不符空中轉診適應症？","opts":["主動脈剝離","自發性腦出血GCS 9","砂輪機截斷右手食指","產後大出血"],"explain":"","trap":0,"ch":""},{"id":194,"year":111,"num":95,"ans":3,"cat":"EMS系統與法規","sub":"空中救護","text":"空中救護人員何者可擔任？","opts":["呼吸治療師","實習醫學生","初級救護技術員","65歲即將退休醫師"],"explain":"","trap":0,"ch":""},{"id":195,"year":111,"num":96,"ans":3,"cat":"EMS系統與法規","sub":"研究方法","text":"研究方法何者為非？","opts":["描述型又叫觀察型","實驗型導入介入措施","前瞻性問題假設預先定義","回溯性研究特定時間點一群人"],"explain":"","trap":0,"ch":""},{"id":196,"year":111,"num":97,"ans":2,"cat":"EMS系統與法規","sub":"研究方法","text":"問卷設計基本流程正確順序？","opts":["產生→確定→實體→測試","確定→測試→產生→實體","確定→產生→實體→測試","產生→確定→實體→測試"],"explain":"","trap":0,"ch":""},{"id":197,"year":111,"num":98,"ans":3,"cat":"災難醫療","sub":"事故指揮系統","text":"何者不是ICS核心價值？","opts":["共通詞彙","模組化","指揮","發言"],"explain":"","trap":0,"ch":""},{"id":198,"year":111,"num":99,"ans":3,"cat":"災難醫療","sub":"事故指揮系統","text":"安全官任務何者最不適當？","opts":["審核應變行動計畫安全議題","緊急制止危險應變行動","參與計畫會議","評估現場狀況"],"explain":1,"trap":0,"ch":""},{"id":199,"year":111,"num":100,"ans":2,"cat":"EMS系統與法規","sub":"教學方法","text":"課程設計模式何者為非？","opts":["歷程模式強調過程非目標","情境模式又稱文化分析模式","試誤模式","目標模式由泰勒提出"],"explain":"","trap":0,"ch":""},{"id":200,"year":112,"num":1,"ans":1,"cat":"EMS系統與法規","sub":"EMS體系","text":"建立完善EMS體系四個面向何者為是？","opts":["卓越領導由醫療指導醫師領導","完整系統含人才招募教育訓練品管","健全財務靠募款補足","妥善立法由各縣市自行立法"],"explain":"","trap":0,"ch":""},{"id":201,"year":112,"num":2,"ans":0,"cat":"EMS系統與法規","sub":"醫學倫理","text":"法律與救護倫理何者為非？","opts":["符合倫理必定合法","每人有不同倫理價值判斷","道德觀建構倫理價值","經常練習有助倫理判斷"],"explain":"合法不一定符合倫理。","trap":1,"ch":""},{"id":202,"year":112,"num":3,"ans":0,"cat":"EMS系統與法規","sub":"心理健康","text":"消防隊員經歷學長殉職後出現自責失眠不願靠近救護車，何者最正確？","opts":["可能持續一個月以上","焦慮症病史不會增加PTSD風險","短期急性壓力症不用擔心","PTSD首選藥物治療"],"explain":"","trap":0,"ch":""},{"id":203,"year":112,"num":4,"ans":3,"cat":"內科急症","sub":"精神急症","text":"救護現場精神異常快速評估中何者相對較不重要？","opts":["主要求救原因","是否有攻擊行為","是否有自殺意圖","是否有精神病史"],"explain":"","trap":0,"ch":""},{"id":204,"year":112,"num":5,"ans":2,"cat":"EMS系統與法規","sub":"感染防護","text":"愛滋病毒暴露處理流程何者正確？","opts":["肥皂水清潔眼睛沖水一周內通報","不需立即檢測HIV","預防性投藥不超過72小時超過7天無效","定期追蹤3次3個月後陰性即排除"],"explain":"","trap":0,"ch":""},{"id":205,"year":112,"num":6,"ans":2,"cat":"EMS系統與法規","sub":"EMS體系","text":"第一反應員何者為非？","opts":["可改善時間急症預後","可以是消防警察民間人員","可取代緊急醫療救護人員","辨識傷病嚴重程度為訓練內容"],"explain":"","trap":0,"ch":""},{"id":206,"year":112,"num":7,"ans":1,"cat":"EMS系統與法規","sub":"派遣系統","text":"DA-CPR何者正確？","opts":["旁觀者CPR無明顯提升存活","必須詢問意識是否清醒及呼吸是否正常","報案者需學過CPR才能執行","有無呼吸與有無正常呼吸辨識率相似"],"explain":"","trap":0,"ch":""},{"id":207,"year":112,"num":8,"ans":1,"cat":"藥理學","sub":"藥理學總論","text":"檳榔藥理學何者為非？","opts":["吸收為口腔內吸收","植物鹼經肝臟首渡效應","毒性應是乙醯膽鹼","長期越吃越多是適應性"],"explain":"口腔吸收不經首渡效應。","trap":1,"ch":""},{"id":208,"year":112,"num":9,"ans":1,"cat":"基礎醫學","sub":"呼吸監測","text":"插管後評估照護何者為非？","opts":["圖一顯示管路滑脫","超音波Double trachea sign位置正確","BVM有阻力單側呼吸音減弱可能氣胸","圖二顯示氣囊破損"],"explain":"Double trachea sign=食道插管。","trap":1,"ch":""},{"id":209,"year":112,"num":10,"ans":2,"cat":"基礎醫學","sub":"呼吸生理","text":"何者最不可能因分流導致低血氧？","opts":["吸入型肺炎","化學性肺炎","急性肺水腫","肺栓塞"],"explain":"","trap":0,"ch":""},{"id":210,"year":112,"num":11,"ans":2,"cat":"內科急症","sub":"呼吸急症","text":"COPD病人雙側wheezing SpO2 88%何者為非？","opts":["噘嘴呼吸肋間凹陷呼吸窘迫","有下呼吸道阻塞","用Ventri-mask提供低流速高濃度氧","考慮給支氣管擴張劑"],"explain":"Ventri-mask是精確濃度非高濃度。","trap":1,"ch":""},{"id":211,"year":112,"num":12,"ans":0,"cat":"基礎醫學","sub":"呼吸監測","text":"EtCO2臨床應用何者為非？","opts":["正常EtCO2為45-50mmHg","可評估CPR品質確認ROSC","嚴重低體溫EtCO2可能偏低","嚴重頭部外傷EtCO2可能偏高"],"explain":"正常35-45非45-50。","trap":1,"ch":""},{"id":212,"year":112,"num":13,"ans":0,"cat":"基礎醫學","sub":"神經解剖","text":"神經系統何者為非？","opts":["自律神經最常見傳遞物質是多巴胺","藥物由類似神經傳遞物質結構產生作用","延腦包含心血管呼吸中樞","交感神經負責壓力反應"],"explain":"最常見是乙醯膽鹼和腎上腺素。","trap":1,"ch":""},{"id":213,"year":112,"num":14,"ans":2,"cat":"基礎醫學","sub":"酸鹼平衡","text":"酸鹼不平衡何者為非？","opts":["呼吸性酸中毒pH<7.35換氣不足","代謝性酸中毒庫式呼吸根據病因治療","呼吸性鹼中毒因過度換氣血中氧氣減少","代謝性鹼中毒pH>7.35大量嘔吐"],"explain":"是CO2減少非O2。","trap":1,"ch":""},{"id":214,"year":112,"num":15,"ans":2,"cat":"婦產與新生兒","sub":"兒童發展","text":"6-12歲學齡兒童發展何者為非？","opts":["體重增加以肌肉為主","道德邏輯推理能力建立","雙親陪伴時間增加","理解死亡概念"],"explain":"同儕增加父母陪伴減少。","trap":1,"ch":""},{"id":215,"year":112,"num":16,"ans":0,"cat":"EMS系統與法規","sub":"醫病關係","text":"55歲意識改變全身抽搐最適合醫病互動模式？","opts":["主動—被動模式","指導—合作模式","共同參與模式","遵從法規模式"],"explain":"","trap":0,"ch":""},{"id":216,"year":112,"num":17,"ans":1,"cat":"病史詢問與評估","sub":"SOAP溝通","text":"55歲右側肢體無力SOAP中何項屬於O？","opts":["早上起床發現右側無力","請病人雙手平舉右手明顯下垂","最後正常時間昨晚10點","過去病史有高血壓"],"explain":"","trap":0,"ch":""},{"id":217,"year":112,"num":18,"ans":0,"cat":"病史詢問與評估","sub":"溝通技巧","text":"35歲女性左手刀傷哭泣學長輕拍肩膀說願不願意多聊聊，此溝通技巧？","opts":["促進facilitation","反射reflection","澄清clarification","同理心empathic responses"],"explain":"","trap":0,"ch":""},{"id":218,"year":112,"num":19,"ans":2,"cat":"病史詢問與評估","sub":"呼吸評估","text":"呼吸模式與臨床疾病何者正確？","opts":["庫斯毛耳呼吸—COPD","陳施氏呼吸—DKA","逆理式呼吸—呼吸衰竭","畢歐氏呼吸—大腦損傷"],"explain":"","trap":0,"ch":""},{"id":219,"year":112,"num":20,"ans":3,"cat":"病史詢問與評估","sub":"理學檢查","text":"協助區分中樞或周邊型眩暈何者為非？","opts":["腳跟接腳尖直線行進","手指摸鼻子反覆點對點運動","觀察眼球活動及眼震方向","叩診槌檢查深部肌腱反射"],"explain":"","trap":0,"ch":""},{"id":220,"year":112,"num":21,"ans":1,"cat":"病史詢問與評估","sub":"臨床決策","text":"收集現場環境主訴病史初評資訊屬於哪一步驟？","opts":["資料判讀","概念形成","應用原則","反應評估"],"explain":"","trap":0,"ch":""},{"id":221,"year":112,"num":22,"ans":1,"cat":"心血管急症","sub":"BLS","text":"成人BLS目前科學證據何者最適當？","opts":["VF每延遲一分鐘存活率降17-20%","目擊者CPR使存活率下降變慢約3-4%/min","高品質CPR壓胸時間佔50%以上","心跳停止10分鐘後腦細胞開始破壞"],"explain":"","trap":0,"ch":""},{"id":222,"year":112,"num":23,"ans":0,"cat":"心血管急症","sub":"ECMO","text":"ECMO何者最不適當？","opts":["可有效改善心臟收縮功能增加灌流","VV-ECMO只能用在肺部疾病","VA-ECMO可用於心肺衰竭","頭外傷顱內出血72hr為禁忌"],"explain":"ECMO替代而非改善心臟功能。","trap":1,"ch":""},{"id":223,"year":112,"num":24,"ans":0,"cat":"創傷","sub":"爆炸傷","text":"爆炸傷何者為是？","opts":["是複合性傷害非所有都經歷所有階段","第一階段傷害為燒傷","彈出患者不全都視為頸椎傷","應先救出避免二次爆炸"],"explain":"","trap":0,"ch":""},{"id":224,"year":112,"num":25,"ans":1,"cat":"創傷","sub":"創傷評估","text":"依現場檢傷分類指引何者最應優先送創傷中心？","opts":["廚師切斷左手食指","80歲跌倒有服抗凝血劑","懷孕18週車禍","時速15公里機車駕駛"],"explain":"","trap":0,"ch":""},{"id":225,"year":112,"num":26,"ans":2,"cat":"創傷","sub":"止血","text":"發現創傷大量外出血立即止血何者最不適當？","opts":["前臂：止血帶","腋下：止血紗布壓力敷料","頸部：傳明酸靜脈注射","腹股溝：肢幹交界止血帶"],"explain":"頸部應直接加壓非TXA。","trap":1,"ch":""},{"id":226,"year":112,"num":27,"ans":1,"cat":"創傷","sub":"出血性休克","text":"休克傷患到院前評估處置何者為是？","opts":["晶質膠質輸液保留到院後","溫暖晶質溶液林格氏液首選","流速與導管內徑4次方正比","老年人副交感刺激反應較差"],"explain":"交感神經反應較差非副交感。","trap":0,"ch":""},{"id":227,"year":112,"num":28,"ans":2,"cat":"創傷","sub":"創傷評估","text":"機車自撞傷患呼吸淺快蒼白濕冷腹部紅腫左小腿變形，最先做？","opts":["左小腿骨折固定","現場打點滴","給予氧氣協助呼吸","擦傷傷口包紮"],"explain":"","trap":0,"ch":""},{"id":228,"year":112,"num":29,"ans":2,"cat":"創傷","sub":"出血性休克","text":"出血性休克輸血注意事項何者為非？","opts":["有懷孕能力婦女用O型Rh陰性","輸液前加熱至39°C","大量輸血ABC score符合2項以上","凝血因子被稀釋低體溫影響凝集"],"explain":"","trap":0,"ch":""},{"id":229,"year":112,"num":30,"ans":0,"cat":"創傷","sub":"頭部創傷","text":"24歲男性安全帽脫落口腔變形持續出血何者最不適當？","opts":["放置口咽呼吸道維持暢通","準備大口徑抽吸管","用下頷推擠法暢通呼吸道","呼吸道比頸椎固定重要"],"explain":"口腔變形勿放口咽。","trap":1,"ch":""},{"id":230,"year":112,"num":31,"ans":0,"cat":"創傷","sub":"頭部創傷","text":"開車自撞後意識清楚頭痛撕裂傷留院觀察突然失去意識，最可能？","opts":["硬腦膜上出血","硬腦膜下出血","蜘蛛膜下腔出血","腦內出血"],"explain":"","trap":0,"ch":""},{"id":231,"year":112,"num":32,"ans":2,"cat":"創傷","sub":"眼睛創傷","text":"眼睛損傷何者最不適當？","opts":["強酸強鹼儘快大量清水沖洗","眼球運動肌肉傷可能複視","眼球挫傷瞳孔異常最常見CN III損傷","可在醫療指導下拔隱形眼鏡"],"explain":"最常見原因是括約肌撕裂。","trap":1,"ch":""},{"id":232,"year":112,"num":33,"ans":3,"cat":"創傷","sub":"脊椎創傷","text":"頸部創傷何者為非？","opts":["高位頸椎須注意呼吸衰竭","中央脊髓症候群上肢較嚴重","CCR建議令傷患轉動頸部排除","脊髓性休克主因交感神經受影響"],"explain":"(D)描述的是神經性休克機轉。","trap":1,"ch":""},{"id":233,"year":112,"num":34,"ans":2,"cat":"創傷","sub":"胸部創傷","text":"胸部創傷何者為是？","opts":["主動脈剝離好發升主動脈","氣管支氣管破裂細支氣管最常見","心臟震盪最常見心律VF","創傷性窒息受壓以下藍紫以上正常"],"explain":"","trap":0,"ch":""},{"id":234,"year":112,"num":35,"ans":2,"cat":"創傷","sub":"胸部創傷","text":"右胸中彈前後各一傷口塑膠包裝貼三邊覆蓋送醫途中惡化何者最不適當？","opts":["再次檢查胸腹部有無其他傷口","執行eFAST評估病情變原因","移除原包裝改用止血敷料填塞","若張力性氣胸在第五肋間針刺減壓"],"explain":"開放性氣胸用胸封貼非止血棉。","trap":1,"ch":""},{"id":235,"year":112,"num":36,"ans":1,"cat":"創傷","sub":"胸部創傷","text":"胸部創傷何者為是？","opts":["eFAST劍突處掃描確認橫膈膜","barcode sign表示可能氣胸","開放性氣胸應針刺減壓","針刺減壓在肋骨下緣下針"],"explain":"","trap":0,"ch":""},{"id":236,"year":112,"num":37,"ans":3,"cat":"創傷","sub":"腹部創傷","text":"50歲車禍車體變形蒼白呼吸淺快何者最懷疑脾臟損傷？","opts":["Turner sign","Cullen sign","右上腹挫傷","Kehr sign"],"explain":"","trap":0,"ch":""},{"id":237,"year":112,"num":38,"ans":0,"cat":"創傷","sub":"腹部創傷","text":"23歲高處跌落腹部鋼片穿刺何者最不適當？","opts":["BP80/50直接給大量2L","穿刺傷口止血固定穿刺物","骨盆不穩用固定帶","休克給氧氣面罩"],"explain":"穿刺傷用允許性低血壓。","trap":1,"ch":""},{"id":238,"year":112,"num":39,"ans":1,"cat":"創傷","sub":"腹部創傷","text":"院前FAST檢查腹部掃描何者錯誤？","opts":["需上下仔細檢查","肝腎交界探頭橫放右肋下腋前線","脾腎交界探頭橫放左肋下腋後線","膀胱探頭放恥骨上緣"],"explain":"肝腎交界探頭縱放。","trap":1,"ch":""},{"id":239,"year":112,"num":40,"ans":1,"cat":"創傷","sub":"骨骼肌肉創傷","text":"骨骼肌肉創傷何者為非？","opts":["肩部評估神經血管損傷","肱骨骨折合併腋神經損傷","拳擊者骨折最常見第五掌骨","高處墜落跟骨10%合併脊椎骨折"],"explain":"肱骨中段=橈神經。","trap":1,"ch":""},{"id":240,"year":112,"num":41,"ans":2,"cat":"創傷","sub":"骨骼肌肉創傷","text":"骨骼肌肉創傷何者錯誤？","opts":["腹部鈍挫傷最常見脾臟肝臟","脫臼復位極度疼痛不建議現場執行","截肢斷肢直接放在冰上","受壓超過4小時鬆開前給輸液或NaHCO3"],"explain":"勿直接放冰上。","trap":1,"ch":""},{"id":241,"year":112,"num":42,"ans":2,"cat":"創傷","sub":"骨骼肌肉創傷","text":"50歲車禍左小腿變形深部撕裂傷何者最不適當？","opts":["遠端脈搏摸不到可考慮牽引","牽引過程疼痛或有阻力停止","開放性骨折將外露組織塞回","搬運開始出血打止血帶"],"explain":"","trap":0,"ch":""},{"id":242,"year":112,"num":43,"ans":3,"cat":"創傷","sub":"燒燙傷","text":"燒燙傷與電灼傷何者最不適當？","opts":["顏面灼傷眉毛焦stridor考慮插管","修正布魯克公式2ml/kg×體重×面積","閃電傷優先急救呼吸中止者","粉末化學物質儘快用清水沖洗"],"explain":"粉末應先刷除再沖。","trap":1,"ch":""},{"id":243,"year":112,"num":44,"ans":2,"cat":"創傷","sub":"燒燙傷","text":"火場救出胸口痛右手前臂灼傷何者最適當？","opts":["SpO2 96%先觀察再決定給氧","手鍊有紀念價值協助降溫","除了病史應詢問搜救人員燃燒物質","意識清楚可講話吸入性灼傷機會小"],"explain":"","trap":0,"ch":""},{"id":244,"year":112,"num":45,"ans":1,"cat":"創傷","sub":"燒燙傷","text":"化工廠接觸不明物質何者為是？","opts":["身上白色粉末立即大量清水沖洗","鹼性燒傷比酸性嚴重為液化性壞死","用中和試劑沖洗化學灼傷","眼睛鹼性燒傷不建議林格氏液沖洗"],"explain":"","trap":0,"ch":""},{"id":245,"year":112,"num":46,"ans":3,"cat":"創傷","sub":"咬傷","text":"河堤路跑遭犬隻咬傷臉部傷口處理何者為非？","opts":["給予抗生素","確實清洗傷口","給予破傷風","到院後立即清創縫合"],"explain":"咬傷不立即縫合。","trap":1,"ch":""},{"id":246,"year":112,"num":47,"ans":3,"cat":"基礎醫學","sub":"血液學","text":"凝血機制三大步驟何者為非？","opts":["受傷處釋出血小板因子","凝血因子串聯形成凝血酶","凝血酶結合纖維蛋白原形成血塊","血塊大過傷口完整封閉"],"explain":"","trap":0,"ch":""},{"id":247,"year":112,"num":48,"ans":3,"cat":"創傷","sub":"爆炸傷","text":"50歲家中氣爆五階段受傷機轉何者為非？","opts":["耳膜可能破裂","呼吸急促不排除吸入性傷害","震盪撞擊可能有家具飛散","爆閃強光應紗布覆蓋雙眼"],"explain":"","trap":0,"ch":""},{"id":248,"year":112,"num":49,"ans":0,"cat":"內科急症","sub":"過敏反應","text":"蜜蜂螫傷全身紅疹上呼吸道阻塞stridor血氧下降最可能成因？","opts":["通氣","擴散","灌流","滲透"],"explain":"","trap":0,"ch":""},{"id":249,"year":112,"num":50,"ans":1,"cat":"內科急症","sub":"肺栓塞","text":"肺栓塞何者為是？","opts":["血栓造成肺靜脈堵塞","骨盆及下肢靜脈最常形成血栓","最常見S1Q3T3和RBBB","院前給抗血小板藥物"],"explain":"","trap":0,"ch":""},{"id":250,"year":112,"num":51,"ans":2,"cat":"內科急症","sub":"呼吸急症","text":"肺氣腫臨床症狀何者為非？","opts":["胸廓拉長桶狀胸","wheezing及乾囉音","體重增加身形肥胖","膚色粉紅色"],"explain":"肺氣腫=瘦。","trap":1,"ch":""},{"id":251,"year":112,"num":52,"ans":2,"cat":"內科急症","sub":"呼吸急症","text":"阻塞性呼吸道疾病何者為是？","opts":["氣喘病人肺泡壁受破壞失去彈力","肺氣腫因黏液塊氣道狹窄","慢性支氣管炎吸吐氣都有阻力升高","肺氣腫會紅血球增生"],"explain":"","trap":0,"ch":""},{"id":252,"year":112,"num":53,"ans":3,"cat":"內科急症","sub":"呼吸急症","text":"插管使用呼吸器氧氣持續下降最不可能原因？","opts":["管路位置錯誤","痰塊阻塞","插管引起氣胸","鎮靜藥物呼吸抑制"],"explain":"已在呼吸器鎮靜藥不造成低血氧。","trap":1,"ch":""},{"id":253,"year":112,"num":54,"ans":0,"cat":"內科急症","sub":"腦中風","text":"58歲右側肢體無力到院前處置何者為非？","opts":["意識清楚可排除低血糖不需測","可用LAPSS評估","低血壓應考慮主動脈剝離","應送可給tPA醫院"],"explain":"意識清楚仍需測血糖！","trap":1,"ch":""},{"id":254,"year":112,"num":55,"ans":3,"cat":"基礎醫學","sub":"神經解剖","text":"腦脊髓液產生處及流動路徑何者為是？","opts":["側腦室→第二→導水管→第三→蜘蛛膜上腔","側腦室→第三→導水管→第四→蜘蛛膜上腔","側腦室→第二→導水管→第三→蜘蛛膜下腔","側腦室→第三→導水管→第四→蜘蛛膜下腔"],"explain":"","trap":0,"ch":""},{"id":255,"year":112,"num":56,"ans":2,"cat":"心血管急症","sub":"心律不整處置","text":"55歲女性心悸1小時BP121/70 GCS15心電圖窄QRS規則快速，何者最適當？","opts":["Adenosine 6mg緩慢推注","可能心房顫動","可考慮迷走神經刺激術","Amiodarone 150mg快注"],"explain":"","trap":0,"ch":""},{"id":256,"year":112,"num":57,"ans":1,"cat":"心血管急症","sub":"心電圖判讀","text":"心電圖判斷最可能何區域心肌梗塞？(I aVL ST上升)","opts":["前壁","側壁","後壁","下壁"],"explain":"","trap":0,"ch":""},{"id":257,"year":112,"num":58,"ans":3,"cat":"心血管急症","sub":"心電圖判讀","text":"四張心電圖代表MI不同時期依時序正確順序？","opts":["圖4→圖3→圖2→圖1","圖2→圖1→圖3→圖4","圖4→圖2→圖1→圖3","圖2→圖3→圖1→圖4"],"explain":"","trap":0,"ch":""},{"id":258,"year":112,"num":59,"ans":3,"cat":"心血管急症","sub":"心電圖判讀","text":"心電圖判讀何者為非？","opts":["心肌缺血可能T波反轉","肺動脈狹窄致右心房擴大P波變高","左心房擴大P mitrale常見肢體導程","胸前導極R波逐漸變小S波變大"],"explain":"R波應逐漸變大S波變小。","trap":1,"ch":""},{"id":259,"year":112,"num":60,"ans":0,"cat":"內科急症","sub":"內分泌急症","text":"40歲無病史全身無力一月體重增皮膚瘀青視野模糊，最可能視野缺損？","opts":["雙眼顳側視野缺損","雙眼鼻側視野缺損","單眼視野缺損","一眼鼻側另一眼顳側"],"explain":"","trap":0,"ch":""},{"id":260,"year":112,"num":61,"ans":1,"cat":"內科急症","sub":"內分泌急症","text":"HHNS及DKA何者錯誤？","opts":["HHNS血糖通常較高","HHNS體內胰島素較少","HHNS形成時間較慢","HHNS病人年紀較高"],"explain":"HHNS胰島素相對足夠。","trap":1,"ch":""},{"id":261,"year":112,"num":62,"ans":0,"cat":"基礎醫學","sub":"血液學","text":"貧血何者正確？","opts":["常見原因分紅血球製造問題或破壞增加","貧血本身是一個疾病診斷","不論何種貧血不會干擾血氧計","貧血症狀與成因輕重無關"],"explain":"","trap":0,"ch":""},{"id":262,"year":112,"num":63,"ans":1,"cat":"基礎醫學","sub":"血液學","text":"血漿和血球何者正確？","opts":["血球以白血球最多","血漿主要成分是水與蛋白質","血球佔70-75%","血漿呈紅色"],"explain":"","trap":0,"ch":""},{"id":263,"year":112,"num":64,"ans":3,"cat":"基礎醫學","sub":"血液學","text":"白血球分類計數何者為非？","opts":["嗜中性85%偏向細菌感染","嗜酸性15%可能寄生蟲","單核球15%可能結核菌","淋巴球60%偏向過敏反應"],"explain":"淋巴球高=病毒感染。","trap":1,"ch":""},{"id":264,"year":112,"num":65,"ans":3,"cat":"基礎醫學","sub":"免疫學","text":"肥大細胞去顆粒化釋放何者為非？","opts":["組織胺","白三稀素","肝素","抗凝血因子"],"explain":"","trap":0,"ch":""},{"id":265,"year":112,"num":66,"ans":1,"cat":"內科急症","sub":"泌尿急症","text":"泌尿急症何者錯誤？","opts":["尿滯留導致老人譫妄","泌尿道結石好發女性","腎盂腎炎有強烈疼痛","台灣結石以草酸鈣最多"],"explain":"好發男性。","trap":1,"ch":""},{"id":266,"year":112,"num":67,"ans":3,"cat":"內科急症","sub":"泌尿急症","text":"何者不屬於泌尿道感染？","opts":["尿道炎","膀胱炎","腎盂腎炎","腎絲球腎炎"],"explain":"","trap":0,"ch":""},{"id":267,"year":112,"num":68,"ans":3,"cat":"基礎醫學","sub":"免疫學","text":"帶記憶能力放出抗體進行中和作用的是？","opts":["白血球","巨嗜細胞","T型淋巴球","B型淋巴球"],"explain":"","trap":0,"ch":""},{"id":268,"year":112,"num":69,"ans":2,"cat":"環境急症","sub":"冷傷害","text":"局部皮膚冷傷害何者最不適當？","opts":["吸菸酒精限制性衣服是加重因子","最容易發生凍瘡位置為下肢","應以溫毯緩慢回溫","大風潮濕內科問題加重傷害"],"explain":"應快速回溫40-42°C。","trap":1,"ch":""},{"id":269,"year":112,"num":70,"ans":0,"cat":"環境急症","sub":"潛水傷害","text":"30歲東北角潛水50米憋氣上升至水面喪失意識何者最不適當？","opts":["現場立即氣管內管插管","應考慮BLS與給氧","鑑別診斷可能動脈氣體栓塞","應考慮高壓氧治療"],"explain":"","trap":0,"ch":""},{"id":270,"year":112,"num":71,"ans":2,"cat":"環境急症","sub":"野外救護","text":"60歲糖尿病女性山中待救左前臂撕裂傷髖部挫傷離受傷8小時何者最適當？","opts":["立即建立含糖輸液避免低血糖","優先尋求直升機吊掛","應評估壓瘡或橫紋肌溶解風險","撕裂傷無出血表示無感染風險"],"explain":"","trap":0,"ch":""},{"id":271,"year":112,"num":72,"ans":0,"cat":"環境急症","sub":"野外救護","text":"長時間搬運避免傷害何者最不適當？","opts":["抬長背板不應讓兩側輪流抬高","固定時讓下肢能活動","允許在擔架上翻身","全身抽氣式護木取代長背板"],"explain":"","trap":0,"ch":""},{"id":272,"year":112,"num":73,"ans":0,"cat":"內科急症","sub":"精神急症","text":"跳樓救助女性在陽台外揚言輕生何者為非？","opts":["採用是非問題","減少刺激維持舒適環境","97%自殺死者生前有精神疾病","目標穩定情勢善用資源"],"explain":"應用開放式問題。","trap":1,"ch":""},{"id":273,"year":112,"num":74,"ans":3,"cat":"內科急症","sub":"精神急症","text":"何者最不可能類似躁症臨床表現？","opts":["紅斑性狼瘡","腎衰竭","安非他命","低血鉀症"],"explain":"","trap":0,"ch":""},{"id":274,"year":112,"num":75,"ans":2,"cat":"內科急症","sub":"老年急症","text":"失智何者錯誤？","opts":["情緒不穩可能是第一徵候","通常和中風基因病毒有關","好好配合治療是可回復的","先當譫妄處置"],"explain":"大部分失智不可逆。","trap":1,"ch":""},{"id":275,"year":112,"num":76,"ans":3,"cat":"內科急症","sub":"老年急症","text":"老年病人何者為是？","opts":["譫妄慢性不可逆","白內障眼內壓上升","高血壓>140/90非典型表現","主動脈剝離適當處置可挽救"],"explain":"","trap":0,"ch":""},{"id":276,"year":112,"num":77,"ans":0,"cat":"婦產與新生兒","sub":"小兒急救","text":"兒童OHCA處置何者為非？","opts":["嬰兒OHCA不使用AED","胸外按壓深度胸廓三分之一約5cm","替代途徑為骨內注射或氣管內管","雙人操作15:2"],"explain":"嬰兒可用AED。","trap":1,"ch":""},{"id":277,"year":112,"num":78,"ans":2,"cat":"婦產與新生兒","sub":"小兒急救","text":"8個月大嬰兒2公斤OHCA何者正確？","opts":["單人急救15:2","插管3.0有氣囊深度12cm","靜脈Epi 0.2mg","氣管內管Epi 0.2mg"],"explain":"","trap":0,"ch":""},{"id":278,"year":112,"num":79,"ans":3,"cat":"婦產與新生兒","sub":"新生兒急救","text":"新生兒擺位與呼吸道清理何者為是？","opts":["建議常規進行口鼻抽吸","以吸球先抽鼻部再口部","毛巾置於枕部保持嗅吸姿勢","不建議常規為胎便染色新生兒抽吸"],"explain":"","trap":0,"ch":""},{"id":279,"year":112,"num":80,"ans":0,"cat":"婦產與新生兒","sub":"產婦急救","text":"婦產急症何者最適當？","opts":["產後大出血可讓胎兒吸吮乳頭","孕婦OHCA同時監測胎兒心跳","子癇前症癲癇發作可給硫酸鎂","胎盤早期剝離第二期無痛大出血"],"explain":"","trap":0,"ch":""},{"id":280,"year":112,"num":81,"ans":1,"cat":"婦產與新生兒","sub":"孕婦創傷","text":"30歲懷孕30週車禍BP85/40 HR140胎心110何者最適當？","opts":["此病人血氧99%不建議給氧","出血量預估至少30%建議輸血","腹痛注意子宮破裂或胎盤前置","懷孕不建議施打破傷風"],"explain":"","trap":0,"ch":""},{"id":281,"year":112,"num":82,"ans":3,"cat":"內科急症","sub":"中毒","text":"口服何種物質中毒可考慮活性碳？","opts":["氰化物","酒精","鋰鹽","鴉片類止痛藥"],"explain":"","trap":0,"ch":""},{"id":282,"year":112,"num":83,"ans":3,"cat":"環境急症","sub":"毒蛇咬傷","text":"何種毒蛇蛇毒為單純神經毒？(雨傘節圖片)","opts":["百步蛇","龜殼花","眼鏡蛇","雨傘節"],"explain":"","trap":0,"ch":""},{"id":283,"year":112,"num":84,"ans":3,"cat":"內科急症","sub":"中毒","text":"吸食過多海洛英給予何者解毒劑？","opts":["Acetylcysteine","Benzodiazepines","Flumazenil","Naloxone"],"explain":"","trap":0,"ch":""},{"id":284,"year":112,"num":85,"ans":2,"cat":"災難醫療","sub":"檢傷分類","text":"START/JumpSTART中rapid treatment快速治療何者不是？","opts":["暢通呼吸道","直接加壓止血","給予胸封貼","給予人工呼吸"],"explain":"","trap":0,"ch":""},{"id":285,"year":112,"num":86,"ans":3,"cat":"災難醫療","sub":"事故指揮系統","text":"ICS管理幕僚何者為非？","opts":["發言官","安全官","聯絡官","財務官"],"explain":"","trap":0,"ch":""},{"id":286,"year":112,"num":87,"ans":1,"cat":"災難醫療","sub":"輻射災害","text":"輻射災害現場救護何者為非？","opts":["適當防護不會嚴重危害","除污優先醫療其次","有生命危險儘速送最近醫院","轉送前脫除衣物由上而下"],"explain":"有生命危險先急救。","trap":1,"ch":""},{"id":287,"year":112,"num":88,"ans":2,"cat":"災難醫療","sub":"毒化災","text":"危害物質GHS標示何者為是？(骷髏頭+驚嘆號圖)","opts":["氧化性物質","刺激性物質","急毒性物質","爆炸性物質"],"explain":"","trap":0,"ch":""},{"id":288,"year":112,"num":89,"ans":0,"cat":"災難醫療","sub":"大型活動","text":"大型活動醫療設站何者為是？","opts":["ALS小組5分鐘內到達任一位置","醫療站10分鐘路程","緊急醫療至少活動前至結束後1小時","遊客無法預估不列入"],"explain":"","trap":0,"ch":""},{"id":289,"year":112,"num":90,"ans":2,"cat":"災難醫療","sub":"運動賽事","text":"鳳凰馬拉松30歲男性目擊倒地何者最不適當？","opts":["經救命術救活率可達80%","AED治療效果明顯","ALS應15分鐘內抵達","現場插管給氧也是處置方向"],"explain":"ALS應5分鐘內。","trap":1,"ch":""},{"id":290,"year":112,"num":91,"ans":1,"cat":"EMS系統與法規","sub":"感染症","text":"腸病毒何者為是？","opts":["基因分ABC三型71型歸A型","人類是唯一傳染來源","主要腸胃道傳染不太呼吸道","嬰兒心肌炎成人心包膜炎由A族克沙奇"],"explain":"","trap":0,"ch":""},{"id":291,"year":112,"num":92,"ans":1,"cat":"災難醫療","sub":"毒化災","text":"已知液體飛濺蒸氣皮膚危害低該選哪級防護？","opts":["A級","B級","C級","D級"],"explain":"","trap":0,"ch":""},{"id":292,"year":112,"num":93,"ans":3,"cat":"災難醫療","sub":"地震災害","text":"地震災害何者為非？","opts":["規模在921後修訂為七級","60%以上在平常外醫療機構求治","屍體沒清理也是疾病來源","死亡最多為1999年集集地震"],"explain":"屍體非疾病來源。","trap":0,"ch":""},{"id":293,"year":112,"num":94,"ans":1,"cat":"EMS系統與法規","sub":"空中救護","text":"空中緊急救護適應症何者為非？","opts":["昏迷指數<10","單手2根以上碾碎性斷指","脊椎脊髓導致癱瘓","溺水併嚴重呼吸系統病症"],"explain":"","trap":0,"ch":""},{"id":294,"year":112,"num":95,"ans":2,"cat":"EMS系統與法規","sub":"空中救護","text":"空中救護優點何者為非？","opts":["縮短治療時間","降低死亡機率","降低運送風險","節省醫療資源"],"explain":"","trap":0,"ch":""},{"id":295,"year":112,"num":96,"ans":3,"cat":"EMS系統與法規","sub":"研究方法","text":"Bradford Hill criteria何者為非？","opts":["強度有較大相對風險","可逆轉性降低曝露","時序性因在果前","特異性數個因導致一個果"],"explain":"","trap":0,"ch":""},{"id":296,"year":112,"num":97,"ans":3,"cat":"EMS系統與法規","sub":"研究方法","text":"EMS研究實施標準方法何者為非？","opts":["描述型","前瞻性","橫斷面","功能型"],"explain":"","trap":0,"ch":""},{"id":297,"year":112,"num":98,"ans":0,"cat":"EMS系統與法規","sub":"品質管理","text":"所有胸痛都做12導程最可能基於品質六面向哪項？","opts":["有效effectiveness","病人為中心","安全","效率"],"explain":"","trap":0,"ch":""},{"id":298,"year":112,"num":99,"ans":0,"cat":"EMS系統與法規","sub":"教學方法","text":"Kern醫學教育課程六步驟何者為非？","opts":["第三階段開發教學資源","第四階段教育策略","第五階段課程執行推廣","第六階段評估回饋"],"explain":"","trap":0,"ch":""},{"id":299,"year":112,"num":100,"ans":1,"cat":"EMS系統與法規","sub":"教學方法","text":"GAS反饋模型「分析」階段有助的行動？","opts":["提供影像紀錄或旁觀者筆記","鼓勵每個學員反思討論為何發生缺失","討論缺失會打擊士氣應避免","應指派隊長提出解決方案"],"explain":"","trap":0,"ch":""},{"id":300,"year":113,"num":1,"ans":2,"cat":"EMS系統與法規","sub":"救護紀錄","text":"救護紀錄表填寫原則何者最不正確？","opts":["適時完成","詳細填寫","主觀呈現","保護隱私"],"explain":"","trap":0,"ch":""},{"id":301,"year":113,"num":2,"ans":3,"cat":"EMS系統與法規","sub":"EMS體系","text":"發現路倒民眾撥打119何者最正確？","opts":["優先派遣ALS team","現場原則Go and Play","離島派空中救護作初級運送","SOP屬前瞻性醫療指導"],"explain":"","trap":0,"ch":""},{"id":302,"year":113,"num":3,"ans":1,"cat":"EMS系統與法規","sub":"法規","text":"114年新法救護技術員管理辦法何者最不正確？","opts":["常見急症新增於中級繼續教育","高級證書每年24小時三年96小時才展延","抽吸血糖12導程為初級新增項目","中級可協助NTG和腎上腺素筆"],"explain":"正確時數規定需確認原始法規。","trap":1,"ch":""},{"id":303,"year":113,"num":4,"ans":2,"cat":"EMS系統與法規","sub":"心理健康","text":"EMT阿志大地震救災後出現症狀持續一年多何者最適當？","opts":["首先考慮急性壓力症","ASD兩年內較少形成PTSD","最常使用抗憂鬱劑","原因是日常壓力超過承受"],"explain":"","trap":0,"ch":""},{"id":304,"year":113,"num":5,"ans":1,"cat":"EMS系統與法規","sub":"感染防護","text":"出勤保護措施何者最不正確？","opts":["接觸傳播(疥瘡)配戴手套","空氣傳播(麻疹)配戴一般外科口罩","體液噴濺戴護目鏡","飛沫傳播(流感)戴一般外科口罩"],"explain":"空氣傳播需N95。","trap":1,"ch":""},{"id":305,"year":113,"num":6,"ans":2,"cat":"EMS系統與法規","sub":"EMS體系","text":"第一反應員制度實務作用何者最符合？","opts":["應具備高級救護訓練","主要目的是控制現場","不能取代救護人員但能提供基本急救","唯一責任是指導旁觀者CPR"],"explain":"","trap":0,"ch":""},{"id":306,"year":113,"num":7,"ans":3,"cat":"EMS系統與法規","sub":"派遣系統","text":"緊急救護派遣員何者最正確？","opts":["大部分報案者無法冷靜回答","約70%來自第二方報案者","派遣員藉詢問意識及脈搏辨識OHCA","派遣員可聯繫警察搜救隊電力公司"],"explain":"","trap":0,"ch":""},{"id":307,"year":113,"num":8,"ans":3,"cat":"藥理學","sub":"急救藥物","text":"急救藥物使用時機何者最正確？","opts":["Amiodarone用於寬QRS快速靜脈注射","Adenosine用於窄波頻脈靜脈滴注","氯化鈣用於毛地黃中毒之高血鉀","Midazolam用於癲癇肌肉注射"],"explain":"","trap":0,"ch":""},{"id":308,"year":113,"num":9,"ans":2,"cat":"藥理學","sub":"急救藥物","text":"Epi 1mg/250ml D5W(4μg/ml)60kg給0.5μg/kg/min標準套管每分鐘幾滴？","opts":["50","100","150","200"],"explain":"30μg/min÷4=7.5ml×20=150滴。","trap":1,"ch":""},{"id":309,"year":113,"num":10,"ans":0,"cat":"藥理學","sub":"急救藥物","text":"成人骨內注射注意事項最不正確？","opts":["脛骨近端遠端肱骨近端股骨遠端均可","腎上腺素阿托品NaHCO3均可給藥","骨折部位為絕對禁忌","給藥前先給1-2ml NS確認通暢"],"explain":"","trap":0,"ch":""},{"id":310,"year":113,"num":11,"ans":2,"cat":"基礎醫學","sub":"呼吸監測","text":"何者最不可能導致EtCO2下降？","opts":["體溫下降","休克","中風","肺栓塞"],"explain":"","trap":0,"ch":""},{"id":311,"year":113,"num":12,"ans":3,"cat":"基礎醫學","sub":"呼吸道處置","text":"困難插管評估何者最不正確？","opts":["嘴巴張大可容納3指幅以上","舌骨下巴距離達三指幅以上","甲狀腺切跡嘴巴底部超過兩指幅","以上三項皆不符則為困難插管"],"explain":"","trap":0,"ch":""},{"id":312,"year":113,"num":13,"ans":2,"cat":"內科急症","sub":"神經急症","text":"右側枕葉梗塞可能產生何種視野缺損？","opts":["雙眼鼻側缺損","雙眼顳側缺損","左眼顳側右眼鼻側缺損","左眼鼻側右眼顳側缺損"],"explain":"","trap":0,"ch":""},{"id":313,"year":113,"num":14,"ans":1,"cat":"心血管急症","sub":"心律不整","text":"何種心律不整由額外傳導路徑再迴旋造成？","opts":["多發性心房心搏過速","PSVT","心房顫動","心室顫動"],"explain":"","trap":0,"ch":""},{"id":314,"year":113,"num":15,"ans":0,"cat":"婦產與新生兒","sub":"兒童發展","text":"兒童發展里程碑何者受傷機轉最不合理？","opts":["八個月大自己走路跌倒","七個月大坐高背椅前趴撞頭","九個月大乳牙撞斷","學步期幼兒容易跌倒嗆到"],"explain":"8個月不會走路。","trap":1,"ch":""},{"id":315,"year":113,"num":16,"ans":1,"cat":"病史詢問與評估","sub":"SOAP溝通","text":"45歲A型流感呼吸喘SOAP何項為O？","opts":["病人覺得愈來愈喘吸不到氣","血氧85%呼吸急促30下/min","過去病史有糖尿病高血壓","可能是A型流感併發重症"],"explain":"","trap":0,"ch":""},{"id":316,"year":113,"num":17,"ans":1,"cat":"病史詢問與評估","sub":"病史詢問","text":"現病史口訣與內容何者最正確？","opts":["P(Pain)症狀發生部位","Q(Quality)症狀特性","R(Relief)減緩加劇因素","S(Situation)症狀發生時間"],"explain":"","trap":0,"ch":""},{"id":317,"year":113,"num":18,"ans":1,"cat":"病史詢問與評估","sub":"溝通技巧","text":"50歲女性頭痛您回答嗯所以還有噁心嘔吐屬於何種技巧？","opts":["促進facilitation","反射reflection","澄清clarification","同理心empathic"],"explain":"","trap":0,"ch":""},{"id":318,"year":113,"num":19,"ans":2,"cat":"病史詢問與評估","sub":"意識評估","text":"GCS評估何者最不正確？","opts":["疼痛刺激張開雙眼Eye Opening為2","疼痛刺激不用胸骨上按壓","脊椎損傷四肢癱瘓Motor為1","僅能回答痛Verbal為3"],"explain":"癱瘓應記NT非1。","trap":1,"ch":""},{"id":319,"year":113,"num":20,"ans":1,"cat":"病史詢問與評估","sub":"理學檢查","text":"78歲腹痛臍周瘀青Cullen sign腹部muscle guarding何者最適當？","opts":["Cullen sign考慮中空器官破裂","guarding代表腹膜炎","腹部叩診對此病人有害","moving dullness考慮腹水感染"],"explain":"Cullen sign代表腹腔出血。","trap":0,"ch":""},{"id":320,"year":113,"num":21,"ans":0,"cat":"病史詢問與評估","sub":"臨床決策","text":"病患評估與決策何者最不正確？","opts":["多重主訴適合收斂式資料判讀","酒醉意識改變直接判定為標籤效應","面臨控管現場仍應預期不安全","病情變化應重新評估"],"explain":"多重主訴應先發散。","trap":1,"ch":""},{"id":321,"year":113,"num":22,"ans":3,"cat":"心血管急症","sub":"ACLS","text":"30歲打球暈倒ROSC後處置何者最不正確？","opts":["進行目標體溫管理","可保護缺血後大腦","可能原因含心肌炎心肌梗塞","ECMO首選VV-ECMO"],"explain":"心臟停止用VA-ECMO。","trap":1,"ch":""},{"id":322,"year":113,"num":23,"ans":3,"cat":"心血管急症","sub":"ECMO","text":"ECPR應用於OHCA傷患特質何者最不適當？","opts":["目擊倒下","可電擊心律","有旁觀者CPR","到院前有ROSC"],"explain":"ECPR用於未ROSC者。","trap":1,"ch":""},{"id":323,"year":113,"num":24,"ans":3,"cat":"創傷","sub":"創傷評估","text":"年輕男性機車自摔右上臂右大腿骨折何者最適當？","opts":["二級檢傷為非危急個案","RTS數值愈低預後愈好","AIS分數愈高損傷愈輕","ISS≧16屬嚴重創傷"],"explain":"","trap":0,"ch":""},{"id":324,"year":113,"num":25,"ans":2,"cat":"創傷","sub":"創傷評估","text":"RTS評估項目不包括？","opts":["收縮壓","昏迷指數","脈搏速率","呼吸速率"],"explain":"","trap":0,"ch":""},{"id":325,"year":113,"num":26,"ans":0,"cat":"創傷","sub":"創傷評估","text":"何者最需送創傷中心？","opts":["懷孕30週車禍","熱湯燙傷雙手6%BSA","30歲酒醉跌倒意識清楚","工人自3米A字梯跌落"],"explain":"","trap":0,"ch":""},{"id":326,"year":113,"num":27,"ans":0,"cat":"創傷","sub":"創傷評估","text":"嚴重創傷到院前處置原則何者最適當？","opts":["視情況請求支援勿延誤送醫","現場處置15分鐘為限","嚴重創傷送最近醫院","休克應現場執行輸液"],"explain":"","trap":0,"ch":""},{"id":327,"year":113,"num":28,"ans":3,"cat":"創傷","sub":"創傷評估","text":"50歲15公尺墜落意識模糊呼吸8次HR140 BP80/50何者最適當？","opts":["現場固定開放性骨折","現場打IV加強鎮痛","現場腹部壓迫減少內出血","保護頸椎維持呼吸道盡快後送創傷中心"],"explain":"","trap":0,"ch":""},{"id":328,"year":113,"num":29,"ans":3,"cat":"創傷","sub":"出血性休克","text":"40歲墜落右大腿變形腫脹右腰瘀青HR140 BP92/50何者最適當？","opts":["SBP>90非休克","優先考慮神經性休克","單純肢體骨折不會造成出血性休克","脈搏壓比血壓先降低"],"explain":"","trap":0,"ch":""},{"id":329,"year":113,"num":30,"ans":3,"cat":"創傷","sub":"出血性休克","text":"出血性休克輸血注意何者最正確？","opts":["血品放入溫水槽或微波爐加熱","有懷孕能力婦女用Rh陽性","TXA促進血小板凝集","大量輸血紅血球血漿血小板1:1:1"],"explain":"","trap":0,"ch":""},{"id":330,"year":113,"num":31,"ans":1,"cat":"創傷","sub":"休克分類","text":"休克何者最適當？","opts":["阻塞性休克一定頸靜脈怒張","代償性休克皮膚濕冷蒼白","神經性休克CRT延長非冰冷","休克最先反應脈搏上升為第一級"],"explain":"","trap":0,"ch":""},{"id":331,"year":113,"num":32,"ans":2,"cat":"創傷","sub":"脊椎創傷","text":"中央脊髓症候群何者最不適當？","opts":["過度伸展或彎曲造成","阻礙運動神經左右傳導","上肢較下肢嚴重→改成下肢較上肢","有薦髓機能保留"],"explain":"上肢>下肢。","trap":1,"ch":""},{"id":332,"year":113,"num":33,"ans":2,"cat":"創傷","sub":"脊椎創傷","text":"脊椎創傷低血壓何者最適當？","opts":["應優先考慮神經性休克","神經性休克有皮膚溼冷心搏過速","輸液1-2L無效可給升壓劑","只有頸椎受傷才可能神經性休克"],"explain":"","trap":0,"ch":""},{"id":333,"year":113,"num":34,"ans":3,"cat":"創傷","sub":"眼睛創傷","text":"眼睛損傷何者最不適當？","opts":["複視可能眼球運動肌肉傷","瞳孔異常最常見括約肌撕裂","化學灼傷可在醫療指導下拔隱形眼鏡","檢查視力從受傷眼先查"],"explain":"應先查沒受傷的眼。","trap":1,"ch":""},{"id":334,"year":113,"num":35,"ans":0,"cat":"創傷","sub":"顏面創傷","text":"顏面創傷何者最適當？","opts":["脫落牙齒泡牛奶或含嘴裡","評估眼球運動是評估CN2 3 6","上頜骨是除鼻骨外最常見顏面骨折","耳朵組織脫落直接包在濕紗裡"],"explain":"","trap":0,"ch":""},{"id":335,"year":113,"num":36,"ans":3,"cat":"創傷","sub":"頭部創傷","text":"60歲喝酒騎腳踏車摔落浣熊眼口鼻鮮血何者最不適當？","opts":["強烈懷疑顱底骨折","擔憂硬腦膜上出血清明期","嘔吐意識不清可能顱內出血或醉酒","以口咽鼻咽或聲門上呼吸道治療"],"explain":"顱底骨折禁鼻咽呼吸道。","trap":1,"ch":""},{"id":336,"year":113,"num":37,"ans":1,"cat":"創傷","sub":"胸部創傷","text":"針刺減壓何者最適當？","opts":["需頸靜脈怒張氣管偏移加患側呼吸音減小加SBP<90","成人第五肋間腋中線前側","張力性氣胸確切治療","兒童也在第五肋間腋中線前側"],"explain":"","trap":0,"ch":""},{"id":337,"year":113,"num":38,"ans":2,"cat":"創傷","sub":"胸部創傷","text":"胸部創傷何者最適當？","opts":["氣管支氣管破裂喉頭周圍最常見","連枷胸呼氣凹陷吸氣凸出","主動脈剝離好發動脈韌帶","創傷性窒息下腔靜脈壓迫"],"explain":"","trap":0,"ch":""},{"id":338,"year":113,"num":39,"ans":0,"cat":"創傷","sub":"胸部創傷","text":"70歲駕駛撞電線桿安全帶勒痕何者最不可能？","opts":["創傷性窒息","心肌挫傷","支氣管損傷","甩鞭損傷"],"explain":"","trap":0,"ch":""},{"id":339,"year":113,"num":40,"ans":3,"cat":"創傷","sub":"腹部創傷","text":"70歲女性心律不整服inderal機車碰撞上腹瘀痕何者最適當？","opts":["eFAST無腹水可排除出血","生命徵象可排除低血容休克","臍周瘀青為Turner sign","救護過程需再次檢查維持SBP 90"],"explain":"","trap":0,"ch":""},{"id":340,"year":113,"num":41,"ans":3,"cat":"創傷","sub":"腹部創傷","text":"28歲女性車禍頸動脈摸得到橈動脈摸不到右上腹瘀傷會陰出血何者最適當？","opts":["骨盆觸診無壓痛可不上固定帶","右上腹痛懷疑脾臟損傷","懷疑腹內出血現場掃FAST","可考慮REBOA止血"],"explain":"","trap":0,"ch":""},{"id":341,"year":113,"num":42,"ans":0,"cat":"創傷","sub":"骨骼肌肉創傷","text":"骨骼肌肉創傷何者最適當？","opts":["脛腓骨骨折出血可達500ml以上","嚴重創傷意識不清可給止痛劑","壓碎傷症候群發生在事故後1-2小時","截肢直接放冰塊上"],"explain":"","trap":0,"ch":""},{"id":342,"year":113,"num":43,"ans":2,"cat":"創傷","sub":"骨骼肌肉創傷","text":"骨骼肌肉損傷評估處置何者最不適當？","opts":["開放性骨折容易感染","80%鎖骨骨折在中三分之一","肘關節損傷評估橈動脈橈神經","高處墜落腳先著地考慮跟骨骨折"],"explain":"肘關節主要評估肱動脈正中神經。","trap":1,"ch":""},{"id":343,"year":113,"num":44,"ans":2,"cat":"創傷","sub":"壓碎傷","text":"地震雙下肢被壓四小時何者最不適當？","opts":["脫困前給大量輸液","脫困時血液進入可能低血壓","再灌流後高血鉀高血磷高血鈣","可考慮鹼化尿液"],"explain":"再灌流後是低血鈣。","trap":1,"ch":""},{"id":344,"year":113,"num":45,"ans":3,"cat":"創傷","sub":"燒燙傷","text":"30歲60kg火災救出1度10% 2度16% 3度14%何者最不適當？","opts":["仍應考慮頭頸傷戴頸圈","預防吸入性灼傷盡早建立進階呼吸道","布魯克公式前8小時1500-2000ml林格氏液","移除衣物飾品以冰敷降溫"],"explain":"不可冰敷！","trap":1,"ch":""},{"id":345,"year":113,"num":46,"ans":3,"cat":"創傷","sub":"電灼傷","text":"颱風台電搶修觸電1000V以上何者最適當？","opts":["用樹枝撥開電線","電流內部損傷不會持續惡化","輸液以含葡萄糖生理食鹽水為主","高壓電應保持距離3-9公尺"],"explain":"","trap":0,"ch":""},{"id":346,"year":113,"num":47,"ans":2,"cat":"創傷","sub":"止血","text":"50歲爬山跌落山谷多處傷臉擦傷左胸腹瘀傷骨盆不穩左大腿開放骨折出血何者最優先？","opts":["給高濃度氧維持95%以上","準備大量輸液通知備血","包紮止血止血帶勿打在骨折處","固定股骨減少出血量"],"explain":"","trap":0,"ch":""},{"id":347,"year":113,"num":48,"ans":0,"cat":"創傷","sub":"止血","text":"止血治療何者最不適當？","opts":["鼠蹊腋下首選傷口填塞","CAT放近心端距傷口5-8cm","CAT打上確認止血遠端脈搏摸不到","止血帶無法用於胸腹傷口"],"explain":"","trap":0,"ch":""},{"id":348,"year":113,"num":49,"ans":1,"cat":"內科急症","sub":"呼吸急症","text":"56歲COPD呼吸喘兩天何者最適當？","opts":["COPD惡化主要表現胸痛胸悶","長時間維持SpO2 100%可能高碳酸血症","12導程可排除STEMI及PE","可考慮β-blocker減緩支氣管痙攣"],"explain":"","trap":0,"ch":""},{"id":349,"year":113,"num":50,"ans":2,"cat":"內科急症","sub":"呼吸急症","text":"25歲氣喘SpO2 88%雙側wheezing何者最不適當？","opts":["可給短效支氣管擴張劑如albuterol","可考慮類固醇硫酸鎂","意識不清有呼吸則給NIPPV","嚴重氣喘心跳停止考慮缺氧張力性氣胸"],"explain":"意識不清不適合NIPPV。","trap":1,"ch":""},{"id":350,"year":113,"num":51,"ans":0,"cat":"內科急症","sub":"腦中風","text":"48歲構音不清臉部不對稱右側麻木何者最不適當？","opts":["臉部表現為貝爾氏麻痺","Babinski sign可能陽性","洋娃娃眼陽性代表腦幹正常","tPA在3-4.5小時內施打"],"explain":"合併肢體無力是中樞性非貝爾氏。","trap":1,"ch":""},{"id":351,"year":113,"num":52,"ans":3,"cat":"內科急症","sub":"腦中風","text":"急性腦中風到院前處置何者最不適當？","opts":["必要時繞道中風資源不足醫院","意識不清IICP頭抬高不超過30度","低血壓須積極處理","輸液首選5%葡萄糖"],"explain":"禁用5%葡萄糖。","trap":1,"ch":""},{"id":352,"year":113,"num":53,"ans":2,"cat":"創傷","sub":"胸部創傷","text":"54歲車禍胸痛HR110 BP85/40 SpO2 95%何者最適當？","opts":["12導程可排除AMI","II III aVF ST上升有NTG應舌下給","eFAST可鑑別氣胸血胸","無頸靜脈怒張可排除張力性氣胸"],"explain":"","trap":0,"ch":""},{"id":353,"year":113,"num":54,"ans":1,"cat":"心血管急症","sub":"心電圖判讀","text":"心電圖V4R ST上升何者最適當？","opts":["應立即舌下NTG","V4R ST上升表示右心室MI","心律不整後送無須監視器","懷孕為tPA絕對禁忌"],"explain":"","trap":0,"ch":""},{"id":354,"year":113,"num":55,"ans":1,"cat":"心血管急症","sub":"ACLS","text":"ACLS急救何者最不適當？","opts":["67歲PEA先CPR給Epi","63歲VF先給Amiodarone 300mg再電擊","58歲complete AVB BP78/42考慮TCP","65歲洗腎寬QRS HR36給Atropine及Calcium"],"explain":"VF應先電擊再給藥。","trap":1,"ch":""},{"id":355,"year":113,"num":56,"ans":0,"cat":"心血管急症","sub":"心電圖判讀","text":"60歲胸痛冒汗心電圖I aVL ST上升，MI位置？","opts":["側壁","前壁","下壁","中隔區"],"explain":"","trap":0,"ch":""},{"id":356,"year":113,"num":57,"ans":1,"cat":"內科急症","sub":"內分泌急症","text":"腎上腺異常疾病何者最適當？","opts":["庫欣氏症低血壓體重減輕","愛迪森疾病皮膚色素沉著體重減輕高血鉀","腎上腺髓質分泌皮質醇醛固酮","腎上腺危象給高劑量止痛藥控制高血壓"],"explain":"","trap":0,"ch":""},{"id":357,"year":113,"num":58,"ans":2,"cat":"內科急症","sub":"內分泌急症","text":"疲倦呼吸淺快噁心嘔吐低血壓皮膚色素沉著最可能？","opts":["庫欣氏症候群","葛瑞夫茲病","愛迪森疾病","何杰金氏病"],"explain":"","trap":0,"ch":""},{"id":358,"year":113,"num":59,"ans":2,"cat":"內科急症","sub":"腹部急症","text":"腸阻塞與急性闌尾炎何者最適當？","opts":["機械性腸阻塞多見大腸以粘黏為主","急性闌尾炎McBurney point外三分之二","闌尾炎轉移痛由肚臍轉至右下腹機械性多粘黏疝氣","麻痺性腸阻塞由腫瘤異物嵌塞"],"explain":"","trap":0,"ch":""},{"id":359,"year":113,"num":60,"ans":1,"cat":"內科急症","sub":"腹部急症","text":"胰臟與胰臟炎何者最不適當？","opts":["胰臟同時有外分泌內分泌功能","膽結石在膽囊管阻塞是常見急性胰臟炎原因","慢性胰臟炎常見於酒癮","反覆慢性胰臟炎易引起糖尿病"],"explain":"應在總膽管非膽囊管。","trap":1,"ch":""},{"id":360,"year":113,"num":61,"ans":3,"cat":"基礎醫學","sub":"血液學","text":"血液組成及相關疾病何者最不適當？","opts":["白蛋白不足造成水腫腹水","血友病缺乏凝血因子","腫瘤溶解症有高尿酸高血鉀高磷低鈣","東方人以何杰金氏症居多"],"explain":"東方人以非何杰金氏居多。","trap":1,"ch":""},{"id":361,"year":113,"num":62,"ans":0,"cat":"基礎醫學","sub":"血液學","text":"貧血何者最不適當？","opts":["缺鐵性貧血容易出現黃疸","嚴重者可能心臟擴大心衰竭","輕微貧血不干擾血氧計","貧血可依血球大小分三類"],"explain":"黃疸見於溶血性非缺鐵性。","trap":1,"ch":""},{"id":362,"year":113,"num":63,"ans":3,"cat":"基礎醫學","sub":"血液學","text":"何者造成正球性貧血？","opts":["葉酸缺乏","缺鐵性貧血","維他命B12缺乏","急性腸胃出血"],"explain":"","trap":0,"ch":""},{"id":363,"year":113,"num":64,"ans":3,"cat":"內科急症","sub":"過敏反應","text":"25歲蜜蜂螫傷BP70/40何者最適當？","opts":["因蜂毒毒性反應呼吸窘迫","白三烯素是低血壓主因","Epi 0.5mg皮下注射","Epi反應不佳可給1-2L NS"],"explain":"","trap":0,"ch":""},{"id":364,"year":113,"num":65,"ans":2,"cat":"內科急症","sub":"過敏反應","text":"25歲露營突發呼吸喘多處紅疹SpO2 85%何者最適當？","opts":["無藥物過敏史可排除過敏性休克","過敏影響心血管後負荷減少心輸出量減少","嚴重過敏可產生上下呼吸道阻塞","致命性過敏插管需用鎮靜劑肌肉鬆弛劑"],"explain":"","trap":0,"ch":""},{"id":365,"year":113,"num":66,"ans":0,"cat":"內科急症","sub":"泌尿急症","text":"副睪炎vs睪丸扭轉疼痛特徵何者最適當？","opts":["副睪炎緩慢疼痛逐漸加劇伴紅腫壓痛","睪丸扭轉延伸至腹股溝有單側紅腫","副睪炎突發劇痛合併噁心嘔吐","睪丸扭轉出現紅腫可上抬緩解"],"explain":"","trap":0,"ch":""},{"id":366,"year":113,"num":67,"ans":1,"cat":"內科急症","sub":"腎臟/電解質","text":"慢性腎衰竭何者最不適當？","opts":["可分血液透析及腹膜透析","透析導管常置於右側鎖骨下動脈","剛開始透析易出現不平衡症候群","不平衡症候群因水分滲透壓改變"],"explain":"導管在靜脈非動脈。","trap":1,"ch":""},{"id":367,"year":113,"num":68,"ans":1,"cat":"環境急症","sub":"溺水","text":"何者最不是影響溺水預後因素？","opts":["水溫","淡水或海水","水的乾淨度","受難者年齡"],"explain":"","trap":0,"ch":""},{"id":368,"year":113,"num":69,"ans":1,"cat":"環境急症","sub":"野外救護","text":"野外救護何者最不適當？","opts":["最重要是環境安全評估","寒冷環境有保護效果延長缺血時間","抗休克褲可固定骨折骨盆大腿","野外運送時間長可給食物飲水"],"explain":"寒冷加速缺血。","trap":1,"ch":""},{"id":369,"year":113,"num":70,"ans":1,"cat":"環境急症","sub":"野外救護","text":"30歲左小腿骨折深山待救需2天搬運何者最不適當？","opts":["排泄問題應注重避免壓瘡","骨折可能開刀應從接觸開始禁食","長背板注意壓瘡可讓翻身","意識不清額外注意防曬"],"explain":"2天搬運不應禁食。","trap":1,"ch":""},{"id":370,"year":113,"num":71,"ans":1,"cat":"內科急症","sub":"精神急症","text":"精神疾病敘述與處置何者最適當？","opts":["思覺失調通常有視幻覺","思覺失調由多巴胺傳導增強用拮抗劑","女性比男性更容易自殺成功","情緒不穩時盡量多身體接觸安撫"],"explain":"","trap":0,"ch":""},{"id":371,"year":113,"num":72,"ans":3,"cat":"內科急症","sub":"精神急症","text":"CAGE何者最不適當？","opts":["C=Cut down","A=Annoyance","G=Guilty","E=Eye closer"],"explain":"E=Eye opener。","trap":1,"ch":""},{"id":372,"year":113,"num":73,"ans":0,"cat":"內科急症","sub":"精神急症","text":"陳先生頭暈左上腹不適半年反覆心跳像要停止最可能？","opts":["焦慮症","思覺失調症","憂鬱症","躁鬱症"],"explain":"","trap":0,"ch":""},{"id":373,"year":113,"num":74,"ans":2,"cat":"內科急症","sub":"老年急症","text":"老年人心衰竭常見症狀何者最不適當？","opts":["疲勞","夜尿","頭暈","食慾不振肝腫大腹水"],"explain":"","trap":0,"ch":""},{"id":374,"year":113,"num":75,"ans":2,"cat":"婦產與新生兒","sub":"小兒急症","text":"哮吼病何者最不適當？","opts":["常見感染源副流行感冒病毒","臨床常有stridor 90%","頸部X光側面照Steeple sign","類固醇可改善減少插管"],"explain":"Steeple sign在正面照。","trap":1,"ch":""},{"id":375,"year":113,"num":76,"ans":2,"cat":"婦產與新生兒","sub":"新生兒急救","text":"新生兒急救四大措施依頻率由多至少順序？","opts":["CBAD","CDAB","CDBA","CABD"],"explain":"","trap":0,"ch":""},{"id":376,"year":113,"num":77,"ans":2,"cat":"婦產與新生兒","sub":"新生兒急救","text":"新生兒急救何者最適當？","opts":["Epi稀釋只為方便正確濃度","Apgar評估外觀心跳血氧活動力呼吸","插管氣管內管選3mm","手摸脈搏比EKG準確"],"explain":"","trap":0,"ch":""},{"id":377,"year":113,"num":78,"ans":3,"cat":"婦產與新生兒","sub":"產婦急救","text":"婦產科病人何者最不適當？","opts":["子癇前症通常發生第一胎","子癇症發生在懷孕第二期","胎盤早期剝離發生第三期","黃體破裂常發生經期後一週"],"explain":"黃體破裂在排卵後約2週。","trap":1,"ch":""},{"id":378,"year":113,"num":79,"ans":0,"cat":"婦產與新生兒","sub":"孕婦創傷","text":"孕婦懷孕母體變化何者最不適當？","opts":["孕婦創傷更易有休克症狀","潮氣容積增加30%","總血量34週增加30%","破水需住院施打抗生素"],"explain":"孕婦代償力更強延遲休克。","trap":1,"ch":""},{"id":379,"year":113,"num":80,"ans":2,"cat":"內科急症","sub":"中毒","text":"中毒病人處理何者最不適當？","opts":["口服NAC不應同時給活性碳","洗胃通常食入1小時內","假酒中毒主要因甲醛毒性","乙二醇中毒可用乙醇治療"],"explain":"主要毒性來自甲酸。","trap":1,"ch":""},{"id":380,"year":113,"num":81,"ans":0,"cat":"內科急症","sub":"中毒","text":"瞳孔縮小口水多痰多大蒜味全身汗濕最可能？","opts":["膽鹼性症候群","抗膽鹼性症候群","鴉片類止痛劑","仿交感神經症候群"],"explain":"","trap":0,"ch":""},{"id":381,"year":113,"num":82,"ans":3,"cat":"災難醫療","sub":"事故指揮系統","text":"ICS何者最不適當？","opts":["指揮官最早抵達位階最高擔任","規模不大指揮官可兼任","每人只有一個直屬長官","安全官須先與指揮官溝通才可制止"],"explain":"安全官可直接制止。","trap":1,"ch":""},{"id":382,"year":113,"num":83,"ans":1,"cat":"災難醫療","sub":"後送原則","text":"大量傷患後送何者最不適當？","opts":["傷情差不多可群送較遠醫院","醫院超負荷採滿載概念","特殊傷患可繞道送醫學中心","附近能量差不多可輪送"],"explain":"超負荷用繞道非滿載。","trap":1,"ch":""},{"id":383,"year":113,"num":84,"ans":1,"cat":"災難醫療","sub":"毒化災","text":"毒化災現場應變何者最不適當？","opts":["冷區穿基本防護","熱區不做任何醫療處置","除汙區穿C級以上","初期隔離距離取決於物質風向量"],"explain":"熱區可做基本呼吸道。","trap":1,"ch":""},{"id":384,"year":113,"num":85,"ans":2,"cat":"災難醫療","sub":"毒化災","text":"毒化物防護裝備何者最適當？","opts":["電動車起火著特搜+SCBA為B級以上","C級可做暖區除汙","氨氣外洩需A級","氫氟酸洩漏後送人員穿B級"],"explain":"","trap":0,"ch":""},{"id":385,"year":113,"num":86,"ans":0,"cat":"災難醫療","sub":"大型活動","text":"馬拉松醫療站設計何者最不適當？","opts":["醫療小組BLS能力即可","醫療小組5分鐘內到達","救護時間至少活動前半小時到後半小時","應與鄰近醫院建立溝通"],"explain":"應具ALS能力。","trap":1,"ch":""},{"id":386,"year":113,"num":87,"ans":1,"cat":"災難醫療","sub":"運動賽事","text":"大型路跑緊急醫療站何者正確？","opts":["有傷患立即通報119","救護站5分鐘內提供服務","總指揮由醫師擔任","法定救護團隊到場配合活動總指揮"],"explain":"","trap":0,"ch":""},{"id":387,"year":113,"num":88,"ans":0,"cat":"災難醫療","sub":"運動賽事","text":"運動賽事緊急醫療何者最不適當？","opts":["醫療團隊專注選手工作人員觀眾需打119","多數項目需裁判許可","有些賽事場上處置時間有限","有些處置受限制需向主辦確認"],"explain":"所有人都需醫療服務。","trap":1,"ch":""},{"id":388,"year":113,"num":89,"ans":2,"cat":"災難醫療","sub":"運動賽事","text":"運動賽事救護籌備何者最適當？","opts":["完全依照當地到院前指引","選手受傷由大會救護先上場","救護動線應有緊急疏散備案","送醫先送最近醫院"],"explain":"","trap":0,"ch":""},{"id":389,"year":113,"num":90,"ans":1,"cat":"EMS系統與法規","sub":"感染症","text":"新興感染症增加原因何者最不適當？","opts":["日本腦炎因生態改變農業發展","愛滋病因國際旅遊貿易蔓延","肺結核在人口密集散播","鼠疫藉戰爭貿易途徑"],"explain":"愛滋病因行為傳播。","trap":1,"ch":""},{"id":390,"year":113,"num":91,"ans":1,"cat":"災難醫療","sub":"核生化","text":"生物恐怖攻擊事件線索何者最不適當？","opts":["染病潛伏期相近密集","某疾病病人數逐漸增加","近期忽然許多同症狀年輕病人","相同症狀集中限定區域"],"explain":"應是突然大量非逐漸。","trap":1,"ch":""},{"id":391,"year":113,"num":92,"ans":2,"cat":"災難醫療","sub":"颱風災害","text":"颱風期間路段積水有電線落下何者最適當？","opts":["立即撤回待命","穿絕緣防護繼續","等待確認電源狀況","用船隻繞過"],"explain":"","trap":0,"ch":""},{"id":392,"year":113,"num":93,"ans":2,"cat":"災難醫療","sub":"地震災害","text":"影響地震傷亡因素何者最不適當？","opts":["主要物理力量引起","多不需手術","傷亡者多分散不同建築物","屍體非疫病來源"],"explain":"傷亡多集中在倒塌建築。","trap":1,"ch":""},{"id":393,"year":113,"num":94,"ans":1,"cat":"EMS系統與法規","sub":"空中救護","text":"直升機降落條件何者最符合？","opts":["能見度1000m半徑直升機1倍","能見度1500m寬度1.5倍","市中心面積2倍能見度800m","鄉村1.5倍能見度無限制"],"explain":"","trap":0,"ch":""},{"id":394,"year":113,"num":95,"ans":3,"cat":"EMS系統與法規","sub":"研究方法","text":"OHCA研究無法即時取得同意應採何種方案？","opts":["遠處同意","經代理人同意","群體同意","推遲同意"],"explain":"","trap":0,"ch":""},{"id":395,"year":113,"num":96,"ans":3,"cat":"EMS系統與法規","sub":"品質管理","text":"品質測量模式結構面項目？","opts":["OHCA電話至電擊時間","重度外傷送創傷中心比例","存活至出院比例","救護人員離職率"],"explain":"","trap":0,"ch":""},{"id":396,"year":113,"num":97,"ans":1,"cat":"EMS系統與法規","sub":"教學方法","text":"何種反饋方式最能促進學員自省學習？","opts":["課後老師單方面反饋","訓練中即時引導反饋","課後學員各自評估","提供標準反饋問卷"],"explain":"","trap":0,"ch":""},{"id":397,"year":113,"num":98,"ans":0,"cat":"EMS系統與法規","sub":"教學方法","text":"Kern六步驟儲備救護義消需求評估何者最不適當？","opts":["教學對象多為青壯年","補足先備知識拿捏難度","考量身體狀況","語言習慣"],"explain":"","trap":0,"ch":""},{"id":398,"year":113,"num":99,"ans":2,"cat":"EMS系統與法規","sub":"教學方法","text":"情境模式何者最不適當？","opts":["又稱文化分析模式","課程目標傳授文化最重要部分","易有具體課程藍圖","易被社會意識形態操控"],"explain":"","trap":0,"ch":""},{"id":399,"year":113,"num":100,"ans":1,"cat":"心血管急症","sub":"心律不整處置","text":"心律不整藥物處置何者最不適當？","opts":["Mobitz II BP70/42可給Epi 2-10μg/min","下壁MI合併Mobitz II BP60/40先給Atropine","polymorphic VT有QT prolong給MgSO4","寬QRS HR160無氣喘可給Adenosine"],"explain":"下壁MI的AVB用Atropine可能無效甚至加重。","trap":1,"ch":""}];
+
+// ============================================================
+// STATE
+// ============================================================
+let mode='all', currentQ=[], qIdx=0, answers=[], sessionWrong=[], filterYears=[], filterCats=[];
+const CATS=[...new Set(Q.map(q=>q.cat))].sort();
+const YEARS=[110,111,112,113];
+
+// STORAGE
+// (storage functions defined in login system)
+function getTotalStats(){const h=getHistory();if(!h.length)return{total:0,acc:0,wrong:getWrongIds().length};const t=h.reduce((a,b)=>a+b.total,0);const c=h.reduce((a,b)=>a+b.correct,0);return{total:t,acc:t?Math.round(c/t*100):0,wrong:getWrongIds().length}}
+// (note functions kept)
+
+// NAV
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+
+function goHome(){
+  show('home');const s=getTotalStats();
+  document.getElementById('s-total').textContent=s.total;
+  document.getElementById('s-acc').textContent=s.acc+'%';
+  document.getElementById('s-wrong').textContent=s.wrong;
+  const wc=getWrongIds().length;
+  document.getElementById('wrong-count-label').textContent=wc?`目前有 ${wc} 題錯題待複習`:'尚無錯題紀錄';
+  const fc=getFavIds().length;
+  document.getElementById('fav-count-label').textContent=fc?`已收藏 ${fc} 題`:'收藏重要題目方便複習';
+  const nc=Object.keys(getNotes()).filter(k=>!!getNotes()[k]).length+getFreeNotes().length;
+  document.getElementById('notes-count-label').textContent=nc?`共 ${nc} 則筆記`:'自由新增與瀏覽所有筆記';
+}
+
+function goFilter(m){
+  mode=m;
+  if(m==='random'){currentQ=shuffle([...Q]).slice(0,25);qIdx=0;answers=[];sessionWrong=[];show('quiz');document.getElementById('quiz-title').textContent='隨機挑戰 25題';renderQuestion();return}
+  if(m==='wrong'){const wids=getWrongIds();if(!wids.length){alert('目前沒有錯題！');return}currentQ=shuffle(Q.filter(q=>wids.includes(q.id)));qIdx=0;answers=[];sessionWrong=[];show('quiz');document.getElementById('quiz-title').textContent=`錯題複習 ${currentQ.length}題`;renderQuestion();return}
+  if(m==='trap'){currentQ=shuffle(Q.filter(q=>q.trap));qIdx=0;answers=[];sessionWrong=[];show('quiz');document.getElementById('quiz-title').textContent=`陷阱題特訓 ${currentQ.length}題`;renderQuestion();return}
+  if(m==='fav'){const fids=getFavIds();if(!fids.length){alert('尚無收藏題目！');return}currentQ=shuffle(Q.filter(q=>fids.includes(q.id)));qIdx=0;answers=[];sessionWrong=[];show('quiz');document.getElementById('quiz-title').textContent=`收藏練習 ${currentQ.length}題`;renderQuestion();return}
+  filterYears=[...YEARS];filterCats=[...CATS];renderFilter();show('filter');
+}
+
+function renderFilter(){
+  document.getElementById('year-chips').innerHTML=YEARS.map(y=>{const cnt=Q.filter(q=>q.year===y).length;const sel=filterYears.includes(y)?'sel':'';return `<div class="chip ${sel}" onclick="toggleYear(${y})">${y}年<span class="count">(${cnt})</span></div>`}).join('');
+  document.getElementById('cat-chips').innerHTML=CATS.map(c=>{const cnt=Q.filter(q=>q.cat===c).length;const sel=filterCats.includes(c)?'sel':'';return `<div class="chip ${sel}" onclick="toggleCat('${c}')">${c}<span class="count">(${cnt})</span></div>`}).join('');
+  updateFilterInfo();
+}
+function toggleYear(y){if(filterYears.includes(y))filterYears=filterYears.filter(x=>x!==y);else filterYears.push(y);renderFilter()}
+function toggleCat(c){if(filterCats.includes(c))filterCats=filterCats.filter(x=>x!==c);else filterCats.push(c);renderFilter()}
+function updateFilterInfo(){const n=Q.filter(q=>filterYears.includes(q.year)&&filterCats.includes(q.cat)).length;document.getElementById('selected-info').textContent=`已選 ${n} 題`;document.getElementById('start-btn').disabled=!n;document.getElementById('start-btn').textContent=n?`開始練習（${n}題）`:'請選擇範圍'}
+function startQuiz(){currentQ=shuffle(Q.filter(q=>filterYears.includes(q.year)&&filterCats.includes(q.cat)));qIdx=0;answers=[];sessionWrong=[];show('quiz');document.getElementById('quiz-title').textContent='練習中';renderQuestion()}
+
+// QUIZ
+function renderQuestion(){
+  if(qIdx>=currentQ.length){showResult();return}
+  const q=currentQ[qIdx];
+  document.getElementById('prog').style.width=((qIdx/currentQ.length)*100)+'%';
+  document.getElementById('q-num').textContent=`第 ${qIdx+1} / ${currentQ.length} 題`;
+  document.getElementById('q-cat').textContent=`${q.year}年 #${q.num} ｜ ${q.sub}`;
+  document.getElementById('q-text').textContent=q.text;
+  document.getElementById('options').innerHTML=q.opts.map((o,i)=>`<div class="option" onclick="pickAnswer(${i})" id="opt-${i}"><span class="letter">${'ABCD'[i]}</span><span>${o}</span></div>`).join('');
+  document.getElementById('explain').classList.remove('show');document.getElementById('explain').textContent='';
+  document.getElementById('next-btn').classList.remove('show');
+  document.getElementById('q-actions').style.display='none';
+  document.getElementById('note-area').classList.remove('show');
+}
+
+function pickAnswer(i){
+  const q=currentQ[qIdx];const opts=document.querySelectorAll('.option');opts.forEach(o=>o.classList.add('disabled'));
+  const correct=q.ans;const isRight=i===correct;
+  opts[i].classList.add(isRight?'correct':'wrong');
+  if(!isRight){opts[correct].classList.add('correct');opts.forEach((o,j)=>{if(j!==i&&j!==correct)o.classList.add('dim')})}
+  else{opts.forEach((o,j)=>{if(j!==correct)o.classList.add('dim')})}
+  answers.push({qId:q.id,picked:i,correct,isRight});
+  if(!isRight){sessionWrong.push(q);const wids=getWrongIds();wids.push(q.id);setWrongIds(wids)}
+  else{let wids=getWrongIds();wids=wids.filter(x=>x!==q.id);setWrongIds(wids)}
+  if(q.explain){document.getElementById('explain').textContent='\u{1F4A1} '+q.explain;document.getElementById('explain').classList.add('show')}
+  document.getElementById('next-btn').classList.add('show');
+  document.getElementById('next-btn').textContent=qIdx>=currentQ.length-1?'查看結果':'下一題 →';
+  // Show action buttons
+  document.getElementById('q-actions').style.display='flex';
+  const favBtn=document.getElementById('fav-btn');const isFav=getFavIds().includes(q.id);
+  favBtn.textContent=isFav?'\u2B50 已收藏':'\u2606 收藏';favBtn.className=isFav?'fav-active':'';
+  const noteBtn=document.getElementById('note-btn');const hasNote=!!getNote(q.id);
+  noteBtn.textContent=hasNote?'\u{1F4DD} 已有筆記':'\u{1F4DD} 加筆記';noteBtn.className=hasNote?'active':'';
+  document.getElementById('note-input').value=getNote(q.id);
+  if(!isRight&&!getNote(q.id)){document.getElementById('note-area').classList.add('show')}
+}
+
+function toggleFav(){const q=currentQ[qIdx];let fids=getFavIds();if(fids.includes(q.id))fids=fids.filter(x=>x!==q.id);else fids.push(q.id);setFavIds(fids);const isFav=fids.includes(q.id);const btn=document.getElementById('fav-btn');btn.textContent=isFav?'\u2B50 已收藏':'\u2606 收藏';btn.className=isFav?'fav-active':''}
+function toggleNoteArea(){document.getElementById('note-area').classList.toggle('show');document.getElementById('note-input').focus()}
+function saveNote(){const q=currentQ[qIdx];const txt=document.getElementById('note-input').value.trim();setNote(q.id,txt);document.getElementById('note-area').classList.remove('show');const btn=document.getElementById('note-btn');btn.textContent=txt?'\u{1F4DD} 已有筆記':'\u{1F4DD} 加筆記';btn.className=txt?'active':''}
+function nextQuestion(){qIdx++;renderQuestion()}
+function confirmQuit(){if(qIdx>0&&qIdx<currentQ.length){if(!confirm('確定離開？進度不會保存。'))return}if(answers.length>0)saveSession();goHome()}
+function saveSession(){const correct=answers.filter(a=>a.isRight).length;addHistory({date:new Date().toLocaleString('zh-TW'),mode:mode==='wrong'?'錯題複習':mode==='trap'?'陷阱題特訓':mode==='random'?'隨機挑戰':mode==='fav'?'收藏練習':'自選練習',total:answers.length,correct,wrong:answers.length-correct,pct:Math.round(correct/answers.length*100)})}
+
+// RESULT
+function showResult(){
+  saveSession();const correct=answers.filter(a=>a.isRight).length;const wrong=answers.length-correct;
+  document.getElementById('r-score').textContent=Math.round(correct/answers.length*100)+'%';
+  document.getElementById('r-total').textContent=`${correct} / ${answers.length} 題`;
+  document.getElementById('r-correct').textContent=correct;document.getElementById('r-wrong').textContent=wrong;
+  document.getElementById('r-review-btn').style.display=sessionWrong.length?'flex':'none';
+  const sec=document.getElementById('r-wrong-section');
+  if(sessionWrong.length){sec.innerHTML=`<div class="wrong-summary"><h3>本次錯題 ${sessionWrong.length} 題</h3><p>${sessionWrong.map(q=>`${q.year}年#${q.num} ${q.sub}`).join('、')}</p></div>`}
+  else{sec.innerHTML='<div style="text-align:center;padding:16px;color:var(--accent2);font-weight:600">\u{1F389} 全部答對！</div>'}
+  show('result');
+}
+function reviewWrong(){currentQ=shuffle([...sessionWrong]);qIdx=0;answers=[];sessionWrong=[];mode='wrong';show('quiz');document.getElementById('quiz-title').textContent=`錯題複習 ${currentQ.length}題`;renderQuestion()}
+
+// HISTORY
+function goHistory(){
+  const h=getHistory();const list=document.getElementById('history-list');
+  if(!h.length){list.innerHTML='<div class="empty-state"><div class="big">\u{1F4CB}</div><p>尚無練習紀錄</p></div>';show('history');return}
+  list.innerHTML=h.map(item=>{const cls=item.pct>=80?'good':item.pct>=60?'mid':'bad';return `<div class="history-item"><div class="left"><h4>${item.mode}</h4><p>${item.date}</p></div><div class="right"><div class="pct ${cls}">${item.pct}%</div><div style="font-size:11px;color:var(--text3)">${item.correct}/${item.total}題</div></div></div>`}).join('');
+  list.innerHTML+=`<div style="text-align:center;margin:20px 0"><button onclick="if(confirm('確定清除你的所有紀錄？（不影響其他人）')){const u=getCurrentUser();['wrong','history','fav','notes','free_notes'].forEach(k=>localStorage.removeItem(userKey(k)));goHome()}" style="padding:10px 24px;border:1.5px solid var(--danger);color:var(--danger);background:none;border-radius:var(--radius);font-size:13px;cursor:pointer">清除所有紀錄</button></div>`;
+  show('history');
+}
+
+// FAVORITES
+function goFavorites(){
+  const fids=getFavIds();const el=document.getElementById('fav-list');
+  if(!fids.length){el.innerHTML='<div class="empty-state"><div class="big">\u2B50</div><p>尚無收藏題目<br>答題時點擊「收藏」加入</p></div>';show('favorites');return}
+  const favQs=Q.filter(q=>fids.includes(q.id));
+  let html=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><span style="font-size:14px;color:var(--text2)">共 ${favQs.length} 題收藏</span><button onclick="goFilter('fav')" style="padding:8px 16px;border:1.5px solid var(--accent);color:var(--accent);background:none;border-radius:20px;font-size:12px;cursor:pointer">練習收藏題</button></div>`;
+  favQs.forEach(q=>{
+    const note=getNote(q.id);
+    html+=`<div class="fav-item"><div class="fav-head"><h4>${q.year}年 #${q.num} ｜ ${q.sub}</h4><span class="fav-del" onclick="removeFav(${q.id})">×</span></div><div class="fav-q">${q.text}</div><div style="margin-top:6px;font-size:12px;color:var(--accent2)">答案：${'ABCD'[q.ans]} ${q.opts[q.ans]}</div>${note?`<div class="fav-note">\u{1F4DD} ${note}</div>`:''}</div>`;
+  });
+  el.innerHTML=html;show('favorites');
+}
+function removeFav(id){let fids=getFavIds();fids=fids.filter(x=>x!==id);setFavIds(fids);goFavorites()}
+
+// WRONG ANALYSIS
+function goWrongAnalysis(){
+  const wids=getWrongIds();const el=document.getElementById('wa-content');
+  if(!wids.length){el.innerHTML='<div class="empty-state"><div class="big">\u2705</div><p>目前沒有錯題！</p></div>';show('wrongAnalysis');return}
+  const wrongQs=Q.filter(q=>wids.includes(q.id));const notes=getNotes();
+  const catCount={};const subCount={};const yearCount={};
+  wrongQs.forEach(q=>{catCount[q.cat]=(catCount[q.cat]||0)+1;subCount[q.sub]=(subCount[q.sub]||0)+1;yearCount[q.year]=(yearCount[q.year]||0)+1});
+  const sortedCats=Object.entries(catCount).sort((a,b)=>b[1]-a[1]);
+  const sortedSubs=Object.entries(subCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const maxCat=sortedCats[0]?sortedCats[0][1]:1;const maxSub=sortedSubs[0]?sortedSubs[0][1]:1;
+  const colors=['#e24b4a','#ba7517','#2e75b6','#1d9e75','#534ab7','#d4537e','#73726c','#639922','#85b7eb','#993c1d'];
+  const notedWrong=Object.keys(notes).filter(k=>wids.includes(parseInt(k))).length;
+
+  let html=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+    <div style="background:var(--card);border-radius:var(--radius);padding:12px;text-align:center;box-shadow:var(--shadow)"><div style="font-size:22px;font-weight:700;color:var(--danger)">${wrongQs.length}</div><div style="font-size:11px;color:var(--text3)">錯題總數</div></div>
+    <div style="background:var(--card);border-radius:var(--radius);padding:12px;text-align:center;box-shadow:var(--shadow)"><div style="font-size:22px;font-weight:700;color:var(--warn)">${sortedCats.length}</div><div style="font-size:11px;color:var(--text3)">涉及分類</div></div>
+    <div style="background:var(--card);border-radius:var(--radius);padding:12px;text-align:center;box-shadow:var(--shadow)"><div style="font-size:22px;font-weight:700;color:var(--accent)">${notedWrong}</div><div style="font-size:11px;color:var(--text3)">已寫筆記</div></div>
+  </div>`;
+  html+=`<div class="tab-row"><div class="tab-btn active" onclick="switchWaTab(0,this)">分類分佈</div><div class="tab-btn" onclick="switchWaTab(1,this)">錯題列表</div></div>`;
+  html+=`<div id="wa-tab0">`;
+  html+=`<div class="analysis-card"><h3>主分類錯題數</h3>`;
+  sortedCats.forEach(([cat,cnt],i)=>{html+=`<div class="bar-row"><div class="bar-label">${cat}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cnt/maxCat*100)}%;background:${colors[i%10]}"></div></div><div class="bar-val">${cnt}</div></div>`});
+  html+=`</div><div class="analysis-card"><h3>子分類 TOP 10</h3>`;
+  sortedSubs.forEach(([sub,cnt],i)=>{html+=`<div class="bar-row"><div class="bar-label">${sub}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(cnt/maxSub*100)}%;background:${colors[i%10]}"></div></div><div class="bar-val">${cnt}</div></div>`});
+  html+=`</div><div class="analysis-card"><h3>年度分佈</h3>`;
+  YEARS.forEach((y,i)=>{const cnt=yearCount[y]||0;html+=`<div class="bar-row"><div class="bar-label">${y}年</div><div class="bar-track"><div class="bar-fill" style="width:${wrongQs.length?Math.round(cnt/wrongQs.length*100):0}%;background:${colors[i]}"></div></div><div class="bar-val">${cnt}</div></div>`});
+  html+=`</div></div>`;
+  html+=`<div id="wa-tab1" style="display:none"><div style="margin-bottom:12px;font-size:13px;color:var(--text2)">點擊「加筆記」記錄容易搞混的觀念</div>`;
+  wrongQs.forEach(q=>{
+    const note=getNote(q.id);
+    html+=`<div class="wrong-q-item"><div class="wq-head"><span class="wq-cat">${q.year}年#${q.num} ${q.cat}›${q.sub}</span><span class="wq-note-btn" onclick="toggleWqNote(${q.id})">${note?'編輯筆記':'加筆記'}</span></div><div class="wq-text">${q.text.length>80?q.text.substring(0,80)+'...':q.text}</div><div class="wq-ans">\u2713 ${'ABCD'[q.ans]}. ${q.opts[q.ans]}</div>${q.explain?`<div style="font-size:12px;color:var(--accent);margin-top:2px">\u{1F4A1} ${q.explain}</div>`:''}${note?`<div class="wq-note">\u{1F4DD} ${note}</div>`:''}<div class="wq-note-edit" id="wqn-${q.id}"><textarea id="wqt-${q.id}" placeholder="記錄容易搞混的觀念...">${note}</textarea><button onclick="saveWqNote(${q.id})">儲存</button></div></div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;show('wrongAnalysis');
+}
+function switchWaTab(idx,btn){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('wa-tab0').style.display=idx===0?'block':'none';document.getElementById('wa-tab1').style.display=idx===1?'block':'none'}
+function toggleWqNote(id){const el=document.getElementById('wqn-'+id);el.style.display=el.style.display==='block'?'none':'block';document.getElementById('wqt-'+id).focus()}
+function saveWqNote(id){const txt=document.getElementById('wqt-'+id).value.trim();setNote(id,txt);goWrongAnalysis()}
+
+// UTILS
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+
+// ============================================================
+// FREE NOTES (not tied to questions)
+// ============================================================
+// (free notes functions moved to login system)
+
+// ============================================================
+// MY NOTES PAGE
+// ============================================================
+function goMyNotes(){
+  const el=document.getElementById('mn-content');
+  const qNotes=getNotes();  // {qId: text}
+  const freeNotes=getFreeNotes(); // [{id,text,date}]
+  
+  // Build combined list
+  let allNotes=[];
+  
+  // Question-tied notes
+  for(const[qIdStr,text] of Object.entries(qNotes)){
+    const qId=parseInt(qIdStr);
+    const q=Q.find(x=>x.id===qId);
+    if(!q||!text) continue;
+    const wids=getWrongIds();
+    allNotes.push({type:'q',qId,q,text,wasWrong:wids.includes(qId),date:''});
+  }
+  
+  // Free notes
+  freeNotes.forEach(fn=>{
+    allNotes.push({type:'free',id:fn.id,text:fn.text,date:fn.date||''});
+  });
+  
+  // Sort: free notes first (by date desc), then question notes
+  allNotes.sort((a,b)=>{
+    if(a.type==='free'&&b.type!=='free') return -1;
+    if(a.type!=='free'&&b.type==='free') return 1;
+    return 0;
+  });
+
+  const totalCount=allNotes.length;
+  const qCount=allNotes.filter(n=>n.type==='q').length;
+  const freeCount=allNotes.filter(n=>n.type==='free').length;
+
+  let html=`<button class="add-note-btn" onclick="showNewNoteForm()">+ 新增自由筆記</button>`;
+  html+=`<div class="new-note-form" id="new-note-form">
+    <textarea id="new-note-text" placeholder="寫下任何想記錄的觀念、口訣、重點..."></textarea>
+    <div class="nf-btns">
+      <button class="nf-save" onclick="saveNewFreeNote()">儲存</button>
+      <button class="nf-cancel" onclick="hideNewNoteForm()">取消</button>
+    </div>
+  </div>`;
+  
+  html+=`<div style="font-size:13px;color:var(--text2);margin-bottom:14px">共 ${totalCount} 則筆記（題目筆記 ${qCount} 則、自由筆記 ${freeCount} 則）</div>`;
+
+  if(!allNotes.length){
+    html+=`<div class="empty-state"><div class="big">\u{1F4D3}</div><p>尚無筆記<br>答題時可加筆記，或點上方新增自由筆記</p></div>`;
+  }
+
+  allNotes.forEach(n=>{
+    if(n.type==='free'){
+      html+=`<div class="note-item">
+        <div class="note-head">
+          <span class="note-tag free-tag">\u{1F4DD} 自由筆記</span>
+          <span class="note-del" onclick="deleteFreeNote('${n.id}')">\u00D7</span>
+        </div>
+        <div class="note-body">${escHtml(n.text)}</div>
+        ${n.date?`<div class="note-time">${n.date}</div>`:''}
+        <div class="note-edit-area" id="fne-${n.id}">
+          <textarea id="fnt-${n.id}">${escHtml(n.text)}</textarea>
+          <div class="ne-btns"><button class="ne-save" onclick="updateFreeNote('${n.id}')">儲存</button><button class="ne-cancel" onclick="document.getElementById('fne-${n.id}').style.display='none'">取消</button></div>
+        </div>
+        <div style="margin-top:6px;text-align:right"><span style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline" onclick="document.getElementById('fne-${n.id}').style.display='block';document.getElementById('fnt-${n.id}').focus()">編輯</span></div>
+      </div>`;
+    } else {
+      const q=n.q;
+      const wrongLabel=n.wasWrong?'<span style="color:var(--danger);font-size:10px;margin-left:6px">\u274C 仍在錯題庫</span>':'<span style="color:var(--accent2);font-size:10px;margin-left:6px">\u2705 已答對</span>';
+      html+=`<div class="note-item">
+        <div class="note-head">
+          <span class="note-tag q-tag">${q.year}\u5E74 #${q.num} ${q.sub}</span>
+          <span class="note-del" onclick="deleteQNote(${q.id})">\u00D7</span>
+        </div>
+        <div class="note-q">${escHtml(q.text.length>80?q.text.substring(0,80)+'...':q.text)}${wrongLabel}</div>
+        <div class="note-body">${escHtml(n.text)}</div>
+        <div style="margin-top:4px;font-size:12px;color:var(--accent2)">\u2713 ${'ABCD'[q.ans]}. ${q.opts[q.ans]}</div>
+        <div class="note-edit-area" id="qne-${q.id}">
+          <textarea id="qnt-${q.id}">${escHtml(n.text)}</textarea>
+          <div class="ne-btns"><button class="ne-save" onclick="updateQNote(${q.id})">儲存</button><button class="ne-cancel" onclick="document.getElementById('qne-${q.id}').style.display='none'">取消</button></div>
+        </div>
+        <div style="margin-top:6px;text-align:right"><span style="font-size:11px;color:var(--accent);cursor:pointer;text-decoration:underline" onclick="document.getElementById('qne-${q.id}').style.display='block';document.getElementById('qnt-${q.id}').focus()">編輯</span></div>
+      </div>`;
+    }
+  });
+
+  el.innerHTML=html;
+  show('myNotes');
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function showNewNoteForm(){document.getElementById('new-note-form').classList.add('show');document.getElementById('new-note-text').focus()}
+function hideNewNoteForm(){document.getElementById('new-note-form').classList.remove('show');document.getElementById('new-note-text').value=''}
+
+function saveNewFreeNote(){
+  const txt=document.getElementById('new-note-text').value.trim();
+  if(!txt){alert('請輸入筆記內容');return}
+  const arr=getFreeNotes();
+  arr.unshift({id:'fn_'+Date.now(),text:txt,date:new Date().toLocaleString('zh-TW')});
+  setFreeNotes(arr);
+  goMyNotes();
+}
+
+function deleteFreeNote(id){
+  if(!confirm('確定刪除此筆記？')) return;
+  let arr=getFreeNotes();arr=arr.filter(n=>n.id!==id);setFreeNotes(arr);goMyNotes();
+}
+
+function updateFreeNote(id){
+  const txt=document.getElementById('fnt-'+id).value.trim();
+  if(!txt){deleteFreeNote(id);return}
+  let arr=getFreeNotes();const idx=arr.findIndex(n=>n.id===id);
+  if(idx>=0){arr[idx].text=txt;arr[idx].date=new Date().toLocaleString('zh-TW')+' (已編輯)'}
+  setFreeNotes(arr);goMyNotes();
+}
+
+function deleteQNote(qId){
+  if(!confirm('確定刪除此題目筆記？')) return;
+  setNote(qId,'');goMyNotes();
+}
+
+function updateQNote(qId){
+  const txt=document.getElementById('qnt-'+qId).value.trim();
+  setNote(qId,txt);goMyNotes();
+}
+
+// ============================================================
+// LOGIN & USER SYSTEM
+// ============================================================
+function getCurrentUser(){return localStorage.getItem('emtp_current_user')||''}
+function setCurrentUser(name){localStorage.setItem('emtp_current_user',name)}
+function userKey(key){return 'emtp_'+getCurrentUser()+'_'+key}
+
+// Override storage functions to use user-prefixed keys
+function getWrongIds(){return JSON.parse(localStorage.getItem(userKey('wrong'))||'[]')}
+function setWrongIds(ids){localStorage.setItem(userKey('wrong'),JSON.stringify([...new Set(ids)]))}
+function getHistory(){return JSON.parse(localStorage.getItem(userKey('history'))||'[]')}
+function addHistory(h){const arr=getHistory();arr.unshift(h);if(arr.length>100)arr.length=100;localStorage.setItem(userKey('history'),JSON.stringify(arr))}
+function getFavIds(){return JSON.parse(localStorage.getItem(userKey('fav'))||'[]')}
+function setFavIds(ids){localStorage.setItem(userKey('fav'),JSON.stringify([...new Set(ids)]))}
+function getNotes(){return JSON.parse(localStorage.getItem(userKey('notes'))||'{}')}
+function setNotes(n){localStorage.setItem(userKey('notes'),JSON.stringify(n))}
+function getFreeNotes(){return JSON.parse(localStorage.getItem(userKey('free_notes'))||'[]')}
+function setFreeNotes(arr){localStorage.setItem(userKey('free_notes'),JSON.stringify(arr))}
+
+function doLogin(){
+  const name=document.getElementById('login-input').value.trim();
+  if(!name){alert('請輸入代號');return}
+  setCurrentUser(name);
+  document.getElementById('login').style.display='none';
+  document.getElementById('user-display').textContent=name;
+  goHome();
+}
+
+function switchUser(){
+  if(!confirm('切換使用者？目前資料已自動保存。')) return;
+  document.getElementById('login').style.display='flex';
+  document.getElementById('login-input').value='';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+}
+
+// EXPORT / IMPORT BACKUP
+function exportBackup(){
+  const user=getCurrentUser();
+  if(!user){alert('請先登入');return}
+  const data={
+    user:user,
+    exportDate:new Date().toLocaleString('zh-TW'),
+    wrong:getWrongIds(),
+    history:getHistory(),
+    fav:getFavIds(),
+    notes:getNotes(),
+    freeNotes:getFreeNotes()
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`EMTP_備份_${user}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  alert('備份檔案已下載！\n請妥善保存，清除快取後可用此檔案還原。');
+}
+
+function importFromFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.user){alert('無效的備份檔案');return}
+      if(!confirm(`確定還原「${data.user}」的資料？\n備份時間：${data.exportDate||'未知'}\n這會覆蓋目前此代號的所有資料。`)) return;
+      setCurrentUser(data.user);
+      localStorage.setItem(userKey('wrong'),JSON.stringify(data.wrong||[]));
+      localStorage.setItem(userKey('history'),JSON.stringify(data.history||[]));
+      localStorage.setItem(userKey('fav'),JSON.stringify(data.fav||[]));
+      localStorage.setItem(userKey('notes'),JSON.stringify(data.notes||{}));
+      localStorage.setItem(userKey('free_notes'),JSON.stringify(data.freeNotes||[]));
+      document.getElementById('login').style.display='none';
+      document.getElementById('user-display').textContent=data.user;
+      alert('還原成功！');
+      goHome();
+    }catch(err){alert('檔案格式錯誤：'+err.message)}
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+// INIT
+(function(){
+  const user=getCurrentUser();
+  if(user){
+    document.getElementById('login').style.display='none';
+    document.getElementById('user-display').textContent=user;
+    goHome();
+  }else{
+    document.getElementById('login').style.display='flex';
+  }
+  // Enter key on login
+  document.getElementById('login-input').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin()});
+})();
+
+// Register SW
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+</script>
+</body>
+</html>
